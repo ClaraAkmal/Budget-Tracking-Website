@@ -1,1 +1,13 @@
-<p>navbar works!</p>
+<nav class="navbar">
+  <a class="brand" routerLink="/dashboard">BudgetTracker</a>
+
+  <div class="nav-links" *ngIf="auth.isLoggedIn">
+    <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
+    <a routerLink="/budgets" routerLinkActive="active">Budgets</a>
+    <a routerLink="/expenses" routerLinkActive="active">Expenses</a>
+    <a routerLink="/income" routerLinkActive="active">Income</a>
+    <a routerLink="/goals" routerLinkActive="active">Goals</a>
+    <a routerLink="/reports" routerLinkActive="active">Reports</a>
+    <button (click)="logout()">Logout</button>
+  </div>
+</nav>

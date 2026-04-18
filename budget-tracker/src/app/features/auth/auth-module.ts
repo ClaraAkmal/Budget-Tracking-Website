@@ -1,9 +1,17 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Auth } from './auth/auth';
+import { ReactiveFormsModule } from '@angular/forms';
+import { RouterModule, Routes } from '@angular/router';
+// import { AuthComponent } from './auth.component';
+import { AuthComponent } from './auth/auth';
+
+
+const routes: Routes = [
+  { path: '', component: AuthComponent }
+];
 
 @NgModule({
-  declarations: [Auth],
-  imports: [CommonModule],
+  declarations: [AuthComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterModule.forChild(routes)]
 })
 export class AuthModule {}

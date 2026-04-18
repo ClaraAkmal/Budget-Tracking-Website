@@ -1,1 +1,22 @@
-<p>dashboard works!</p>
+<div class="dashboard">
+  <h1>Dashboard</h1>
+
+  <div class="summary-cards">
+    <div class="card income">
+      <h3>Total Income</h3>
+      <p>{{ totalIncome | currency:'EGP' }}</p>
+    </div>
+    <div class="card expenses">
+      <h3>Total Expenses</h3>
+      <p>{{ totalExpenses | currency:'EGP' }}</p>
+    </div>
+    <div class="card balance" [ngClass]="{ 'positive': balance >= 0, 'negative': balance < 0 }">
+      <h3>Balance</h3>
+      <p>{{ balance | currency:'EGP' }}</p>
+    </div>
+    <div class="card goals">
+      <h3>Active Goals</h3>
+      <p>{{ goalsCount }}</p>
+    </div>
+  </div>
+</div>

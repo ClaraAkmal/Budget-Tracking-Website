@@ -3,4 +3,6 @@ export interface User {
   email: string;
   displayName: string;
   createdAt: string;
+  idToken?: string;
+  expiresIn?: string;
 }
