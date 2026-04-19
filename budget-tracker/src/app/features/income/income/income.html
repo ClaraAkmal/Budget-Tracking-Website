@@ -1,1 +1,136 @@
-<p>income works!</p>
+<div class="income-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Income</h1>
+    <button class="btn-primary" (click)="openAddModal()">+ Add Income</button>
+  </div>
+
+  <!-- Summary Card -->
+  <div class="summary-card">
+    <span class="summary-label">Total Shown</span>
+    <span class="summary-amount">{{ getTotalIncome() | currency }}</span>
+  </div>
+
+  <!-- Search & Filters -->
+  <div class="filters-bar">
+    <input
+      type="text"
+      [(ngModel)]="searchTerm"
+      (input)="applyFilters()"
+      placeholder="Search by source..."
+      class="search-input"
+    />
+
+    <select [(ngModel)]="filterSource" (change)="applyFilters()">
+      <option value="">All Sources</option>
+      <option *ngFor="let src of sources" [value]="src">{{ src }}</option>
+    </select>
+
+    <button class="btn-ghost"
+            (click)="searchTerm = ''; filterSource = ''; applyFilters()">
+      Clear
+    </button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper">
+    <table *ngIf="filteredIncomes.length > 0; else emptyState">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Source</th>
+          <th>Amount</th>
+          <th>Recurring</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let income of filteredIncomes; trackBy: trackByIncomeId"
+            [ngClass]="{ 'row-recurring': income.isRecurring }">
+          <td>{{ income.date | date:'mediumDate' }}</td>
+          <td>
+            <span class="source-badge">{{ income.source }}</span>
+          </td>
+          <td class="amount-cell">{{ income.amount | currency }}</td>
+          <td>
+            <span class="recurring-badge"
+                  [ngClass]="{ 'badge-yes': income.isRecurring, 'badge-no': !income.isRecurring }">
+              {{ income.isRecurring ? 'Recurring' : 'One-time' }}
+            </span>
+          </td>
+          <td class="actions-cell">
+            <button class="btn-edit"   (click)="openEditModal(income)">Edit</button>
+            <button class="btn-delete" (click)="deleteIncome(income)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <ng-template #emptyState>
+      <div class="empty-state">
+        <p>No income entries found. Add your first income to start tracking.</p>
+      </div>
+    </ng-template>
+  </div>
+
+</div>
+
+<!-- Modal Overlay -->
+<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2>{{ editingIncome ? 'Edit Income' : 'Add Income' }}</h2>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <form [formGroup]="incomeForm" (ngSubmit)="onSubmit()">
+
+      <div class="form-group">
+        <label>Source</label>
+        <select formControlName="source">
+          <option value="">Select a source</option>
+          <option *ngFor="let src of sources" [value]="src">{{ src }}</option>
+        </select>
+        <span class="error-msg"
+              *ngIf="incomeForm.get('source')?.invalid && incomeForm.get('source')?.touched">
+          Source is required.
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label>Amount ($)</label>
+        <input type="number" formControlName="amount"
+               placeholder="e.g. 3000.00" min="0.01" step="0.01"/>
+        <span class="error-msg"
+              *ngIf="incomeForm.get('amount')?.invalid && incomeForm.get('amount')?.touched">
+          Enter a valid amount (min $0.01).
+        </span>
+      </div>
+
+      <div class="form-group">
+        <label>Date</label>
+        <input type="date" formControlName="date"/>
+        <span class="error-msg"
+              *ngIf="incomeForm.get('date')?.invalid && incomeForm.get('date')?.touched">
+          Date is required.
+        </span>
+      </div>
+
+      <div class="form-group form-group-checkbox">
+        <input type="checkbox" id="isRecurring" formControlName="isRecurring"/>
+        <label for="isRecurring">Recurring income</label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn-primary"
+                [disabled]="incomeForm.invalid || isSubmitting">
+          {{ isSubmitting ? 'Saving...' : (editingIncome ? 'Update' : 'Add Income') }}
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>

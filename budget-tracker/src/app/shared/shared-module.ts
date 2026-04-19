@@ -1,12 +1,12 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
 import { NavbarComponent } from './navbar/navbar';
 import { Spinner } from './spinner/spinner';
+import { CurrencyFormatPipe } from './pipes/currency-format.pipe';
 
 @NgModule({
-  declarations: [NavbarComponent, Spinner],
-  imports: [CommonModule, RouterModule],
-  exports: [NavbarComponent, Spinner]
+  declarations: [NavbarComponent, Spinner, CurrencyFormatPipe],
+  imports: [CommonModule],
+  exports: [NavbarComponent, Spinner, CurrencyFormatPipe]
 })
 export class SharedModule {}

@@ -1,10 +1,20 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Budgets } from './budgets/budgets';
-import { BudgetFormDialog } from './budget-form-dialog/budget-form-dialog';
+import { RouterModule, Routes } from '@angular/router';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BudgetsComponent } from './budgets/budgets';
+
+const routes: Routes = [
+  { path: '', component: BudgetsComponent }
+];
 
 @NgModule({
-  declarations: [Budgets, BudgetFormDialog],
-  imports: [CommonModule],
+  declarations: [BudgetsComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule.forChild(routes)
+  ]
 })
 export class BudgetsModule {}

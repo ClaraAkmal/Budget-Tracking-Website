@@ -4,6 +4,7 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
 import { Budget } from '../models/budget.model';
 import { environment } from '../../../environments/environment';
+import { Expense } from '../models/expense.model';
 
 @Injectable({ providedIn: 'root' })
 export class BudgetService {
@@ -38,4 +39,20 @@ export class BudgetService {
       `${this.dbUrl}/users/${userId}/budgets/${budgetId}.json`
     ).pipe(tap(() => this.loadBudgets(userId)));
   }
+  
+recalculateSpent(userId: string, expenses: Expense[], budgets: Budget[]): void {
+  budgets.forEach(budget => {
+    const spent = expenses
+      .filter(e =>
+        e.category === budget.category &&
+        e.date.startsWith(budget.month)
+      )
+      .reduce((sum, e) => sum + e.amount, 0);
+
+    if (spent !== budget.spent) {
+      const updated: Budget = { ...budget, spent };
+      this.updateBudget(userId, updated).subscribe();
+    }
+  });
+}
 }

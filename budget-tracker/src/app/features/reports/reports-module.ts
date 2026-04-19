@@ -1,9 +1,19 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Reports } from './reports/reports';
+import { RouterModule, Routes } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { ReportsComponent } from './reports/reports';
+
+const routes: Routes = [
+  { path: '', component: ReportsComponent }
+];
 
 @NgModule({
-  declarations: [Reports],
-  imports: [CommonModule],
+  declarations: [ReportsComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterModule.forChild(routes)
+  ]
 })
 export class ReportsModule {}

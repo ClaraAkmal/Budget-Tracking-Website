@@ -1,1 +1,146 @@
-<p>reports works!</p>
+<div class="reports-page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Reports</h1>
+    <div class="header-filter">
+      <input
+        type="month"
+        [(ngModel)]="filterMonth"
+        (change)="applyMonthFilter()"
+      />
+      <button class="btn-ghost" (click)="clearFilter()">All Time</button>
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+
+    <div class="kpi-card kpi-income">
+      <span class="kpi-label">Total Income</span>
+      <span class="kpi-value">{{ totalIncome | currency }}</span>
+    </div>
+
+    <div class="kpi-card kpi-expenses">
+      <span class="kpi-label">Total Expenses</span>
+      <span class="kpi-value">{{ totalExpenses | currency }}</span>
+    </div>
+
+    <div class="kpi-card"
+         [ngClass]="{ 'kpi-positive': balance >= 0, 'kpi-negative': balance < 0 }">
+      <span class="kpi-label">Balance</span>
+      <span class="kpi-value">{{ balance | currency }}</span>
+    </div>
+
+    <div class="kpi-card"
+         [ngClass]="{ 'kpi-positive': savingsRate >= 0, 'kpi-negative': savingsRate < 0 }">
+      <span class="kpi-label">Savings Rate</span>
+      <span class="kpi-value">{{ savingsRate }}%</span>
+    </div>
+
+  </div>
+
+  <!-- Two Column Section -->
+  <div class="two-col">
+
+    <!-- Expenses by Category -->
+    <div class="report-card">
+      <h2 class="report-card-title">Expenses by Category</h2>
+
+      <div *ngIf="expensesByCategory.length > 0; else noExpenses">
+        <div
+          class="bar-row"
+          *ngFor="let item of expensesByCategory; trackBy: trackByCat"
+        >
+          <span class="bar-label">{{ item.category }}</span>
+          <div class="bar-track">
+            <div
+              class="bar-fill bar-fill--red"
+              [ngStyle]="{ 'width': getBarWidth(item.percentage) }"
+            ></div>
+          </div>
+          <span class="bar-meta">
+            {{ item.amount | currency }} ({{ item.percentage }}%)
+          </span>
+        </div>
+      </div>
+
+      <ng-template #noExpenses>
+        <p class="no-data">No expense data for this period.</p>
+      </ng-template>
+    </div>
+
+    <!-- Income by Source -->
+    <div class="report-card">
+      <h2 class="report-card-title">Income by Source</h2>
+
+      <div *ngIf="incomeBySource.length > 0; else noIncome">
+        <div
+          class="bar-row"
+          *ngFor="let item of incomeBySource; trackBy: trackByCat"
+        >
+          <span class="bar-label">{{ item.category }}</span>
+          <div class="bar-track">
+            <div
+              class="bar-fill bar-fill--green"
+              [ngStyle]="{ 'width': getBarWidth(item.percentage) }"
+            ></div>
+          </div>
+          <span class="bar-meta">
+            {{ item.amount | currency }} ({{ item.percentage }}%)
+          </span>
+        </div>
+      </div>
+
+      <ng-template #noIncome>
+        <p class="no-data">No income data for this period.</p>
+      </ng-template>
+    </div>
+
+  </div>
+
+  <!-- Budget Variance Table -->
+  <div class="report-card full-width">
+    <h2 class="report-card-title">Budget Variance</h2>
+
+    <div class="table-wrapper" *ngIf="budgetVariances.length > 0; else noBudgets">
+      <table>
+        <thead>
+          <tr>
+            <th>Category</th>
+            <th>Month</th>
+            <th>Budget Limit</th>
+            <th>Actual Spent</th>
+            <th>Variance</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let v of budgetVariances; trackBy: trackByVariance"
+            [ngClass]="getVarianceClass(v.status)"
+          >
+            <td>{{ v.category }}</td>
+            <td>{{ v.month }}</td>
+            <td>{{ v.limit    | currency }}</td>
+            <td>{{ v.spent    | currency }}</td>
+            <td [ngClass]="getVarianceClass(v.status)">
+              {{ v.variance   | currency }}
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="getVarianceClass(v.status)">
+                {{ v.status === 'over' ? 'Over Budget' :
+                   v.status === 'warning' ? 'Near Limit' : 'Under Budget' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <ng-template #noBudgets>
+      <p class="no-data">No budget data for this period.</p>
+    </ng-template>
+  </div>
+
+</div>
