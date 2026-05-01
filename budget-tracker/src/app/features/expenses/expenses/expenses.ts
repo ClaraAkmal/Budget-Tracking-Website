@@ -40,12 +40,13 @@ export class ExpensesComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userId = this.authService.currentUser?.uid ?? '';
-    this.transactionService.loadExpenses(this.userId);
+  if (!this.userId) return;
 
     this.sub = this.transactionService.expenses$.subscribe(data => {
       this.expenses = data;
       this.applyFilters();
     });
+    this.transactionService.loadExpenses(this.userId);
 
     this.initForm();
   }
@@ -146,4 +147,22 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub.unsubscribe();
   }
+getHighestExpense(): number {
+  if (!this.filteredExpenses.length) return 0;
+  return Math.max(...this.filteredExpenses.map(e => e.amount));
+}
+getRecurringCount(): number {
+  return this.expenses.filter(e => e.isRecurring).length;
+}
+
+getTopCategory(): string {
+  if (!this.expenses.length) return '—';
+  const map = new Map<string, number>();
+  this.expenses.forEach(e => map.set(e.category, (map.get(e.category) ?? 0) + e.amount));
+  return [...map.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
+}
+
+getTotalExpenses(): number {
+  return this.expenses.reduce((s, e) => s + e.amount, 0);
+}
 }

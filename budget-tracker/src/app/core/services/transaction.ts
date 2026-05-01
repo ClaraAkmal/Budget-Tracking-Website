@@ -65,4 +65,15 @@ export class TransactionService {
     return this.http.delete(`${this.dbUrl}/users/${userId}/incomes/${id}.json`)
       .pipe(tap(() => this.loadIncomes(userId)));
   }
+  clear(): void {
+  this.expensesSubject.next([]);
+  this.incomesSubject.next([]);
+}
+getExpensesValue(): Expense[] {
+  return this.expensesSubject.value;
+}
+
+getIncomesValue(): Income[] {
+  return this.incomesSubject.value;
+}
 }

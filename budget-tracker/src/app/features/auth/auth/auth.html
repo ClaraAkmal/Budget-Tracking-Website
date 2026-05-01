@@ -1,40 +1,88 @@
-<div class="auth-container">
-  <div class="auth-card">
-    <h2>{{ isLoginMode ? 'Login' : 'Register' }}</h2>
+<div class="auth-wrapper">
+  <div class="auth-brand">
+    <div class="brand-content">
+      <div class="brand-logo">
+        <span class="logo-symbol">₿</span>
+      </div>
+      <h1>BudgetTracker</h1>
+      <p>Take control of your finances. Track every dollar, reach every goal.</p>
+      <div class="brand-stats">
+        <div class="stat"><span class="stat-num">100%</span><span class="stat-label">Secure</span></div>
+        <div class="stat"><span class="stat-num">Live</span><span class="stat-label">Sync</span></div>
+        <div class="stat"><span class="stat-num">Free</span><span class="stat-label">Forever</span></div>
+      </div>
+    </div>
+  </div>
 
-    <form [formGroup]="authForm" (ngSubmit)="onSubmit()">
-
-      <div class="form-group">
-        <label>Email</label>
-        <input type="email" formControlName="email" placeholder="Enter your email" />
-        <span class="error"
-          *ngIf="authForm.get('email')?.invalid && authForm.get('email')?.touched">
-          Valid email is required.
-        </span>
+  <div class="auth-form-panel">
+    <div class="auth-form-inner">
+      <div class="auth-heading">
+        <h2>{{ isLoginMode ? 'Welcome back' : 'Create account' }}</h2>
+        <p>{{ isLoginMode ? 'Sign in to your dashboard' : 'Start tracking your finances today' }}</p>
       </div>
 
-      <div class="form-group">
-        <label>Password</label>
-        <input type="password" formControlName="password" placeholder="Min 6 characters" />
-        <span class="error"
-          *ngIf="authForm.get('password')?.invalid && authForm.get('password')?.touched">
-          Password must be at least 6 characters.
-        </span>
+      <div class="auth-tabs">
+        <button class="auth-tab" [class.active]="isLoginMode" (click)="switchMode(true)">Sign In</button>
+        <button class="auth-tab" [class.active]="!isLoginMode" (click)="switchMode(false)">Register</button>
       </div>
 
-      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <div class="error-banner" *ngIf="errorMessage">
+        <span class="error-icon">!</span>{{ errorMessage }}
+      </div>
 
-      <button type="submit" [disabled]="authForm.invalid || isLoading">
-        {{ isLoading ? 'Please wait...' : (isLoginMode ? 'Login' : 'Register') }}
-      </button>
+      <form [formGroup]="authForm" (ngSubmit)="onSubmit()">
+        <div class="form-group" *ngIf="!isLoginMode">
+          <label>Display Name</label>
+          <div class="input-wrap">
+            <span class="input-icon">👤</span>
+            <input type="text" formControlName="displayName" placeholder="Your full name"/>
+          </div>
+          <span class="error-msg"
+                *ngIf="authForm.get('displayName')?.invalid && authForm.get('displayName')?.touched">
+            Name is required.
+          </span>
+        </div>
 
-    </form>
+        <div class="form-group">
+          <label>Email Address</label>
+          <div class="input-wrap">
+            <span class="input-icon">@</span>
+            <input type="email" formControlName="email" placeholder="you@example.com"/>
+          </div>
+          <span class="error-msg"
+                *ngIf="authForm.get('email')?.invalid && authForm.get('email')?.touched">
+            Enter a valid email.
+          </span>
+        </div>
 
-    <p class="toggle-text">
-      {{ isLoginMode ? 'No account?' : 'Already registered?' }}
-      <button type="button" (click)="toggleMode()">
-        {{ isLoginMode ? 'Register' : 'Login' }}
-      </button>
-    </p>
+        <div class="form-group">
+          <label>Password</label>
+          <div class="input-wrap">
+            <span class="input-icon">🔒</span>
+            <input [type]="showPassword ? 'text' : 'password'"
+                   formControlName="password" placeholder="Min 6 characters"/>
+            <button type="button" class="toggle-pw" (click)="showPassword = !showPassword">
+              {{ showPassword ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <span class="error-msg"
+                *ngIf="authForm.get('password')?.invalid && authForm.get('password')?.touched">
+            Password must be at least 6 characters.
+          </span>
+        </div>
+
+        <button type="submit" class="btn-submit" [disabled]="authForm.invalid || isLoading">
+          <span *ngIf="!isLoading">{{ isLoginMode ? 'Sign In' : 'Create Account' }}</span>
+          <span *ngIf="isLoading" class="spinner-inline"></span>
+        </button>
+      </form>
+
+      <p class="switch-mode">
+        {{ isLoginMode ? "Don't have an account?" : 'Already have an account?' }}
+        <button class="link-btn" (click)="switchMode(!isLoginMode)">
+          {{ isLoginMode ? 'Register' : 'Sign In' }}
+        </button>
+      </p>
+    </div>
   </div>
 </div>

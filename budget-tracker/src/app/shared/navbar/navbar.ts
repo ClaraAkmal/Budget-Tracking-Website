@@ -14,4 +14,9 @@ export class NavbarComponent {
   logout(): void {
     this.auth.logout();
   }
+  getInitials(): string {
+  const name = this.auth.currentUser?.displayName || 
+               this.auth.currentUser?.email || 'U';
+  return name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
+}
 }

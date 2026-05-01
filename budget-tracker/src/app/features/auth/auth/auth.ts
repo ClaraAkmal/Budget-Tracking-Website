@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef  } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
@@ -14,18 +14,29 @@ export class AuthComponent implements OnInit {
   isLoginMode = true;
   isLoading = false;
   errorMessage = '';
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
     private auth: AuthService,
-    private router: Router
+    private router: Router,
+      private cdr: ChangeDetectorRef 
+
   ) {}
 
   ngOnInit(): void {
     this.authForm = this.fb.group({
+      displayName: [''],
       email: ['', [Validators.required, Validators.email]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
+  }
+
+  switchMode(isLogin: boolean): void {
+    this.isLoginMode = isLogin;
+    this.authForm.reset();
+    this.errorMessage = '';
+    this.isLoading = false;
   }
 
   toggleMode(): void {
@@ -35,17 +46,26 @@ export class AuthComponent implements OnInit {
   }
 
   onSubmit(): void {
-    if (this.authForm.invalid) return;
-    this.isLoading = true;
-    this.errorMessage = '';
-    const { email, password } = this.authForm.value;
-    const action$ = this.isLoginMode
-      ? this.auth.login(email, password)
-      : this.auth.register(email, password);
+  if (this.authForm.invalid) return;
 
-    action$.subscribe({
-      next: () => { this.isLoading = false; this.router.navigate(['/dashboard']); },
-      error: (err) => { this.isLoading = false; this.errorMessage = err.message; }
-    });
-  }
+  this.isLoading = true;
+  this.errorMessage = '';
+
+  const { email, password, displayName } = this.authForm.value;
+  const action$ = this.isLoginMode
+    ? this.auth.login(email, password)
+    : this.auth.register(email, password, displayName);
+
+  action$.subscribe({
+    next: () => {
+      this.isLoading = false;
+      this.router.navigate(['/dashboard']);
+    },
+    error: (err: Error) => {
+      this.isLoading = false;
+      this.errorMessage = err.message;
+      this.cdr.detectChanges(); 
+    }
+  });
+}
 }

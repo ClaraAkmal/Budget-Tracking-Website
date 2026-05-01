@@ -35,4 +35,10 @@ export class GoalService {
     return this.http.delete(`${this.dbUrl}/users/${userId}/goals/${id}.json`)
       .pipe(tap(() => this.loadGoals(userId)));
   }
+  getGoalsValue(): Goal[] {
+  return this.goalsSubject.value;
+}
+  clear(): void {
+  this.goalsSubject.next([]);
+}
 }

@@ -55,4 +55,10 @@ recalculateSpent(userId: string, expenses: Expense[], budgets: Budget[]): void {
     }
   });
 }
+getBudgetsValue(): Budget[] {
+  return this.budgetsSubject.value;
+}
+clear(): void {
+  this.budgetsSubject.next([]);
+}
 }

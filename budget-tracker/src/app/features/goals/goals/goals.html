@@ -1,154 +1,148 @@
-<div class="goals-page">
-
-  <!-- Page Header -->
+<div class="page">
   <div class="page-header">
-    <h1>Savings Goals</h1>
-    <button class="btn-primary" (click)="openAddModal()">+ Add Goal</button>
+    <div>
+      <h1>Savings Goals</h1>
+      <p>Set targets and track your progress</p>
+    </div>
+    <button class="btn-primary" (click)="openAddModal()">+ New Goal</button>
   </div>
 
-  <div class="summary-row" *ngIf="goals.length > 0">
-  <div class="summary-card">
-    <span class="summary-label">Total Goals</span>
-    <span class="summary-value">{{ goals.length }}</span>
+  <!-- Stats Row -->
+  <div class="stats-row" *ngIf="goals.length > 0">
+    <div class="stat-card">
+      <span class="stat-label">Total Goals</span>
+      <span class="stat-val">{{ goals.length }}</span>
+    </div>
+    <div class="stat-card stat-card--green">
+      <span class="stat-label">Completed</span>
+      <span class="stat-val">{{ getCompletedCount() }}</span>
+    </div>
+    <div class="stat-card stat-card--indigo">
+      <span class="stat-label">Total Saved</span>
+      <span class="stat-val">{{ getTotalSaved() | currency }}</span>
+    </div>
+    <div class="stat-card stat-card--amber">
+      <span class="stat-label">Still Needed</span>
+      <span class="stat-val">{{ getTotalRemaining() | currency }}</span>
+    </div>
   </div>
-  <div class="summary-card summary-card--green">
-    <span class="summary-label">Completed</span>
-    <span class="summary-value">{{ getCompletedCount() }}</span>
-  </div>
-  <div class="summary-card summary-card--indigo">
-    <span class="summary-label">Total Saved</span>
-    <span class="summary-value">{{ getTotalSaved() | currency }}</span>
-  </div>
-</div>
 
-  <!-- Goals Grid -->
-  <div class="goals-grid" *ngIf="goals.length > 0; else emptyState">
-    <div
-      class="goal-card"
-      *ngFor="let goal of goals; trackBy: trackByGoalId"
-      [ngClass]="getStatusClass(goal)"
-    >
-      <!-- Card Header -->
-      <div class="card-header">
-        <div class="card-title-row">
-          <h3 class="goal-title">{{ goal.title }}</h3>
-          <span class="status-badge" [ngClass]="getStatusClass(goal)">
-            {{ getStatusLabel(goal) }}
-          </span>
+  <!-- Goal Cards -->
+  <div class="goals-grid" *ngIf="goals.length > 0; else empty">
+    <div class="goal-card" *ngFor="let g of goals; trackBy: trackByGoalId">
+
+      <div class="gc-top">
+        <div class="gc-title-row">
+          <h3 class="gc-title">{{ g.title }}</h3>
+          <span class="gc-status-badge" [ngClass]="getStatusClass(g)">{{ getStatusLabel(g) }}</span>
         </div>
-        <div class="card-actions">
-          <button class="btn-edit"   (click)="openEditModal(goal)">Edit</button>
-          <button class="btn-delete" (click)="deleteGoal(goal)">Delete</button>
+        <div class="gc-actions">
+          <button class="icon-btn edit-btn" (click)="openEditModal(g)">✎</button>
+          <button class="icon-btn del-btn"  (click)="deleteGoal(g)">✕</button>
         </div>
       </div>
 
-      <!-- Amounts -->
-      <div class="amounts-row">
-        <div class="amount-block">
-          <span class="amount-label">Saved</span>
-          <span class="amount-value saved">{{ goal.savedAmount | currency }}</span>
+      <!-- Ring + Numbers -->
+      <div class="gc-body">
+        <div class="gc-ring-wrap">
+          <svg class="gc-ring" viewBox="0 0 80 80">
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#f1f5f9" stroke-width="8"/>
+            <circle cx="40" cy="40" r="32" fill="none"
+                    [attr.stroke]="getProgressColor(g)"
+                    stroke-width="8"
+                    stroke-linecap="round"
+                    stroke-dasharray="201"
+                    [attr.stroke-dashoffset]="getRingOffset(g)"
+                    transform="rotate(-90 40 40)"/>
+          </svg>
+          <div class="gc-ring-label">
+            <span class="gc-ring-pct">{{ getProgress(g) | number:'1.0-0' }}%</span>
+          </div>
         </div>
-        <div class="amount-divider">of</div>
-        <div class="amount-block">
-          <span class="amount-label">Target</span>
-          <span class="amount-value target">{{ goal.targetAmount | currency }}</span>
-        </div>
-        <div class="amount-block remaining-block">
-          <span class="amount-label">Remaining</span>
-          <span class="amount-value remaining">{{ getRemainingAmount(goal) | currency }}</span>
+
+        <div class="gc-numbers">
+          <div class="gc-num-row">
+            <span class="gc-num-label">Saved</span>
+            <span class="gc-num-val green">{{ g.savedAmount | currency }}</span>
+          </div>
+          <div class="gc-num-row">
+            <span class="gc-num-label">Target</span>
+            <span class="gc-num-val">{{ g.targetAmount | currency }}</span>
+          </div>
+          <div class="gc-num-row">
+            <span class="gc-num-label">Remaining</span>
+            <span class="gc-num-val amber">{{ getRemainingAmount(g) | currency }}</span>
+          </div>
+          <div class="gc-num-row">
+            <span class="gc-num-label">Deadline</span>
+            <span class="gc-num-val date">{{ g.deadline | date:'MMM d, yyyy' }}</span>
+          </div>
         </div>
       </div>
 
-      <!-- Progress Bar -->
-      <div class="progress-section">
-        <div class="progress-track">
-          <div
-            class="progress-fill"
-            [ngStyle]="{
-              'width': getProgress(goal) + '%',
-              'background-color': getProgressColor(goal)
-            }"
-          ></div>
+      <!-- Bar Progress -->
+      <div class="gc-bar-wrap">
+        <div class="gc-bar-track">
+          <div class="gc-bar-fill"
+               [ngStyle]="{ 'width': getProgress(g) + '%', 'background': getProgressColor(g) }">
+          </div>
         </div>
-        <span class="progress-pct">{{ getProgress(goal) | number:'1.0-0' }}%</span>
       </div>
 
-      <!-- Deadline -->
-      <div class="card-footer">
-        <span class="deadline-label">Deadline</span>
-        <span class="deadline-value">{{ goal.deadline | date:'mediumDate' }}</span>
+      <!-- Days Remaining -->
+      <div class="gc-footer">
+        <span class="gc-days" [ngClass]="getDaysClass(g)">
+          {{ getDaysRemaining(g) > 0 ? getDaysRemaining(g) + ' days left' : 'Past deadline' }}
+        </span>
       </div>
 
     </div>
   </div>
 
-  <ng-template #emptyState>
+  <ng-template #empty>
     <div class="empty-state">
       <div class="empty-icon">🎯</div>
-      <p>No goals yet. Set your first savings goal!</p>
+      <h3>No goals yet</h3>
+      <p>Set a savings goal — emergency fund, vacation, new laptop — anything!</p>
+      <button class="btn-primary" (click)="openAddModal()">+ Create First Goal</button>
     </div>
   </ng-template>
-
 </div>
 
-<!-- Modal Overlay -->
-<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-
-    <div class="modal-header">
-      <h2>{{ editingGoal ? 'Edit Goal' : 'Add Goal' }}</h2>
+<!-- Modal -->
+<div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-head">
+      <h2>{{ editingGoal ? 'Edit Goal' : 'New Goal' }}</h2>
       <button class="modal-close" (click)="closeModal()">✕</button>
     </div>
-
     <form [formGroup]="goalForm" (ngSubmit)="onSubmit()">
-
-      <div class="form-group">
+      <div class="field">
         <label>Goal Title</label>
-        <input type="text" formControlName="title"
-               placeholder="e.g. Emergency Fund"/>
-        <span class="error-msg"
-              *ngIf="goalForm.get('title')?.invalid && goalForm.get('title')?.touched">
-          Title is required.
-        </span>
+        <input type="text" formControlName="title" placeholder="e.g. Emergency Fund"/>
+        <span class="err" *ngIf="goalForm.get('title')?.invalid && goalForm.get('title')?.touched">Required</span>
       </div>
-
-      <div class="form-group">
+      <div class="field">
         <label>Target Amount ($)</label>
-        <input type="number" formControlName="targetAmount"
-               placeholder="e.g. 5000" min="1"/>
-        <span class="error-msg"
-              *ngIf="goalForm.get('targetAmount')?.invalid && goalForm.get('targetAmount')?.touched">
-          Enter a valid target (min $1).
-        </span>
+        <input type="number" formControlName="targetAmount" placeholder="5000" min="1"/>
+        <span class="err" *ngIf="goalForm.get('targetAmount')?.invalid && goalForm.get('targetAmount')?.touched">Min $1</span>
       </div>
-
-      <div class="form-group">
-        <label>Amount Already Saved ($)</label>
-        <input type="number" formControlName="savedAmount"
-               placeholder="e.g. 1200" min="0"/>
-        <span class="error-msg"
-              *ngIf="goalForm.get('savedAmount')?.invalid && goalForm.get('savedAmount')?.touched">
-          Enter a valid saved amount (min $0).
-        </span>
+      <div class="field">
+        <label>Already Saved ($)</label>
+        <input type="number" formControlName="savedAmount" placeholder="0" min="0"/>
+        <span class="err" *ngIf="goalForm.get('savedAmount')?.invalid && goalForm.get('savedAmount')?.touched">Min $0</span>
       </div>
-
-      <div class="form-group">
+      <div class="field">
         <label>Deadline</label>
         <input type="date" formControlName="deadline"/>
-        <span class="error-msg"
-              *ngIf="goalForm.get('deadline')?.invalid && goalForm.get('deadline')?.touched">
-          Deadline is required.
-        </span>
+        <span class="err" *ngIf="goalForm.get('deadline')?.invalid && goalForm.get('deadline')?.touched">Required</span>
       </div>
-
       <div class="modal-actions">
         <button type="button" class="btn-ghost" (click)="closeModal()">Cancel</button>
-        <button type="submit" class="btn-primary"
-                [disabled]="goalForm.invalid || isSubmitting">
-          {{ isSubmitting ? 'Saving...' : (editingGoal ? 'Update' : 'Add Goal') }}
+        <button type="submit" class="btn-primary" [disabled]="goalForm.invalid || isSubmitting">
+          {{ isSubmitting ? 'Saving...' : (editingGoal ? 'Update' : 'Create Goal') }}
         </button>
       </div>
-
     </form>
   </div>
 </div>

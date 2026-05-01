@@ -1,22 +1,143 @@
 <div class="dashboard">
-  <h1>Dashboard</h1>
 
-  <div class="summary-cards">
-    <div class="card income">
-      <h3>Total Income</h3>
-      <p>{{ totalIncome | currency:'EGP' }}</p>
+  <div class="dash-header">
+    <div>
+      <h1>Good {{ getTimeOfDay() }}, {{ authService.currentUser?.displayName || 'there' }} 👋</h1>
+      <p>Here's your financial overview for today</p>
     </div>
-    <div class="card expenses">
-      <h3>Total Expenses</h3>
-      <p>{{ totalExpenses | currency:'EGP' }}</p>
+    <span class="date-chip">{{ today | date:'EEEE, MMMM d' }}</span>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-income">
+      <div class="kpi-top">
+        <span class="kpi-label">Total Income</span>
+        <div class="kpi-icon income-icon">↑</div>
+      </div>
+      <div class="kpi-value">{{ totalIncome | currency }}</div>
+      <div class="kpi-sub">This month</div>
     </div>
-    <div class="card balance" [ngClass]="{ 'positive': balance >= 0, 'negative': balance < 0 }">
-      <h3>Balance</h3>
-      <p>{{ balance | currency:'EGP' }}</p>
+
+    <div class="kpi-card kpi-expenses">
+      <div class="kpi-top">
+        <span class="kpi-label">Total Expenses</span>
+        <div class="kpi-icon expense-icon">↓</div>
+      </div>
+      <div class="kpi-value">{{ totalExpenses | currency }}</div>
+      <div class="kpi-sub">This month</div>
     </div>
-    <div class="card goals">
-      <h3>Active Goals</h3>
-      <p>{{ goalsCount }}</p>
+
+    <div class="kpi-card" [ngClass]="balance >= 0 ? 'kpi-balance-pos' : 'kpi-balance-neg'">
+      <div class="kpi-top">
+        <span class="kpi-label">Balance</span>
+        <div class="kpi-icon balance-icon">≈</div>
+      </div>
+      <div class="kpi-value" [ngClass]="balance >= 0 ? 'value-green' : 'value-red'">
+        {{ balance | currency }}
+      </div>
+      <div class="kpi-sub">Income − Expenses</div>
+    </div>
+
+    <div class="kpi-card kpi-goals">
+      <div class="kpi-top">
+        <span class="kpi-label">Active Goals</span>
+        <div class="kpi-icon goals-icon">◎</div>
+      </div>
+      <div class="kpi-value">{{ activeGoals }}</div>
+      <div class="kpi-sub">In progress</div>
     </div>
   </div>
+  <!-- Mid Section -->
+  <div class="mid-grid">
+    <!-- Budget Overview -->
+    <div class="card">
+      <div class="card-head">
+        <h2>Budget Overview</h2>
+        <a routerLink="/budgets" class="card-link">View all →</a>
+      </div>
+      <div *ngIf="topBudgets.length > 0; else noBudgets">
+        <div class="budget-row" *ngFor="let b of topBudgets; trackBy: trackById">
+          <div class="budget-row-head">
+            <span class="budget-cat">{{ b.category }}</span>
+            <span class="budget-amounts">
+              <span [ngClass]="getBudgetAmountClass(b)">{{ b.spent | currency }}</span>
+              <span class="budget-limit"> / {{ b.limit | currency }}</span>
+            </span>
+          </div>
+          <div class="budget-track">
+            <div class="budget-fill"
+                 [ngStyle]="{ 'width': getBudgetPct(b) + '%' }"
+                 [ngClass]="getBudgetFillClass(b)">
+            </div>
+          </div>
+          <div class="budget-pct-row">
+            <span class="budget-pct" [ngClass]="getBudgetAmountClass(b)">
+              {{ getBudgetPct(b) | number:'1.0-0' }}% used
+            </span>
+            <span class="budget-status-badge" [ngClass]="getBudgetStatusClass(b)">
+              {{ getBudgetStatusLabel(b) }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <ng-template #noBudgets>
+        <div class="empty-card">
+          <p>No budgets set.</p>
+          <a routerLink="/budgets" class="btn-sm-primary">+ Add Budget</a>
+        </div>
+      </ng-template>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="card">
+      <div class="card-head">
+        <h2>Recent Transactions</h2>
+        <a routerLink="/expenses" class="card-link">View all →</a>
+      </div>
+      <div *ngIf="recentTransactions.length > 0; else noTxns">
+        <div class="tx-item" *ngFor="let tx of recentTransactions; trackBy: trackById">
+          <div class="tx-dot" [ngClass]="tx.type === 'income' ? 'dot-green' : 'dot-red'"></div>
+          <div class="tx-info">
+            <span class="tx-desc">{{ tx.description }}</span>
+            <span class="tx-meta">{{ tx.category }} · {{ tx.date | date:'MMM d' }}</span>
+          </div>
+          <span class="tx-amount" [ngClass]="tx.type === 'income' ? 'amount-pos' : 'amount-neg'">
+            {{ tx.type === 'income' ? '+' : '-' }}{{ tx.amount | currency }}
+          </span>
+        </div>
+      </div>
+      <ng-template #noTxns>
+        <div class="empty-card">
+          <p>No transactions yet.</p>
+          <a routerLink="/expenses" class="btn-sm-primary">+ Add Expense</a>
+        </div>
+      </ng-template>
+    </div>
+
+  </div>
+
+  <!-- Goals Snapshot -->
+  <div class="card full-card" *ngIf="topGoals.length > 0">
+    <div class="card-head">
+      <h2>Savings Goals</h2>
+      <a routerLink="/goals" class="card-link">View all →</a>
+    </div>
+    <div class="goals-strip">
+      <div class="goal-chip" *ngFor="let g of topGoals; trackBy: trackById">
+        <div class="goal-chip-top">
+          <span class="goal-chip-title">{{ g.title }}</span>
+          <span class="goal-chip-pct">{{ getGoalPct(g) | number:'1.0-0' }}%</span>
+        </div>
+        <div class="goal-track">
+          <div class="goal-fill" [ngStyle]="{ 'width': getGoalPct(g) + '%', 'background': getGoalColor(g) }"></div>
+        </div>
+        <div class="goal-chip-bottom">
+          <span>{{ g.savedAmount | currency }} saved</span>
+          <span>{{ g.targetAmount | currency }} goal</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>

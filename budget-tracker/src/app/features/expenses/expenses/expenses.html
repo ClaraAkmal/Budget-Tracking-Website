@@ -1,139 +1,132 @@
-<div class="expenses-page">
-
-  <!-- Page Header -->
+<div class="page">
   <div class="page-header">
-    <h1>Expenses</h1>
+    <div>
+      <h1>Expenses</h1>
+      <p>Track where your money goes</p>
+    </div>
     <button class="btn-primary" (click)="openAddModal()">+ Add Expense</button>
   </div>
 
-  <!-- Search & Filters -->
-  <div class="filters-bar">
-    <input
-      type="text"
-      [(ngModel)]="searchTerm"
-      (input)="applyFilters()"
-      placeholder="Search by description or category..."
-      class="search-input"
-    />
+  <!-- Summary Strip -->
+  <div class="summary-strip">
+    <div class="summary-item">
+      <span class="si-label">Total Expenses</span>
+      <span class="si-value red">{{ getTotalExpenses() | currency }}</span>
+    </div>
+    <div class="summary-item">
+      <span class="si-label">This Month</span>
+      <span class="si-value">{{ filteredExpenses.length }} transactions</span>
+    </div>
+    <div class="summary-item">
+      <span class="si-label">Recurring</span>
+      <span class="si-value blue">{{ getRecurringCount() }} active</span>
+    </div>
+    <div class="summary-item">
+      <span class="si-label">Top Category</span>
+      <span class="si-value">{{ getTopCategory() }}</span>
+    </div>
+  </div>
 
+  <!-- Search & Filter -->
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" [(ngModel)]="searchTerm" (input)="applyFilters()"
+             placeholder="Search expenses..." class="search-input"/>
+    </div>
+    
     <select [(ngModel)]="filterCategory" (change)="applyFilters()">
       <option value="">All Categories</option>
       <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
     </select>
-
-    <button class="btn-ghost" (click)="searchTerm = ''; filterCategory = ''; applyFilters()">
-      Clear
-    </button>
+    <button class="btn-ghost" (click)="searchTerm=''; filterCategory=''; applyFilters()">Clear</button>
   </div>
 
   <!-- Table -->
-  <div class="table-wrapper">
-    <table *ngIf="filteredExpenses.length > 0; else emptyState">
+  <div class="table-card" *ngIf="filteredExpenses.length > 0; else empty">
+    <table>
       <thead>
         <tr>
           <th>Date</th>
-          <th>Category</th>
           <th>Description</th>
+          <th>Category</th>
           <th>Amount</th>
-          <th>Recurring</th>
+          <th>Type</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let expense of filteredExpenses; trackBy: trackByExpenseId"
-            [ngClass]="{ 'row-recurring': expense.isRecurring }">
-          <td>{{ expense.date | date:'mediumDate' }}</td>
+        <tr *ngFor="let e of filteredExpenses; trackBy: trackByExpenseId"
+            [ngClass]="{ 'row-recurring': e.isRecurring }">
+          <td class="col-date">{{ e.date | date:'MMM d, yyyy' }}</td>
+          <td class="col-desc">{{ e.description }}</td>
+          <td><span class="cat-chip">{{ e.category }}</span></td>
+          <td class="col-amount red-text">{{ e.amount | currency }}</td>
           <td>
-            <span class="category-badge">{{ expense.category }}</span>
-          </td>
-          <td>{{ expense.description }}</td>
-          <td class="amount-cell">{{ expense.amount | currency }}</td>
-          <td>
-            <span class="recurring-badge"
-                  [ngClass]="{ 'badge-yes': expense.isRecurring, 'badge-no': !expense.isRecurring }">
-              {{ expense.isRecurring ? 'Recurring' : 'One-time' }}
+            <span class="type-badge" [ngClass]="e.isRecurring ? 'type-recurring' : 'type-once'">
+              {{ e.isRecurring ? '↻ Recurring' : '· One-time' }}
             </span>
           </td>
-          <td class="actions-cell">
-            <button class="btn-edit"   (click)="openEditModal(expense)">Edit</button>
-            <button class="btn-delete" (click)="deleteExpense(expense)">Delete</button>
+          <td class="col-actions">
+            <button class="icon-btn edit-btn" (click)="openEditModal(e)">✎</button>
+            <button class="icon-btn del-btn"  (click)="deleteExpense(e)">✕</button>
           </td>
         </tr>
       </tbody>
     </table>
-
-    <ng-template #emptyState>
-      <div class="empty-state">
-        <p>No expenses found. Add your first expense to start tracking.</p>
-      </div>
-    </ng-template>
   </div>
 
+  <ng-template #empty>
+    <div class="empty-state">
+      <div class="empty-icon">💸</div>
+      <h3>No expenses found</h3>
+      <p>Start tracking your spending by adding your first expense.</p>
+      <button class="btn-primary" (click)="openAddModal()">+ Add Expense</button>
+    </div>
+  </ng-template>
 </div>
 
-<!-- Modal Overlay -->
-<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-
-    <div class="modal-header">
-      <h2>{{ editingExpense ? 'Edit Expense' : 'Add Expense' }}</h2>
+<!-- Modal -->
+<div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-head">
+      <h2>{{ editingExpense ? 'Edit Expense' : 'New Expense' }}</h2>
       <button class="modal-close" (click)="closeModal()">✕</button>
     </div>
-
     <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()">
-
-      <div class="form-group">
+      <div class="field">
         <label>Category</label>
         <select formControlName="category">
-          <option value="">Select a category</option>
+          <option value="">Select category</option>
           <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
         </select>
-        <span class="error-msg"
-              *ngIf="expenseForm.get('category')?.invalid && expenseForm.get('category')?.touched">
-          Category is required.
-        </span>
+        <span class="err" *ngIf="expenseForm.get('category')?.invalid && expenseForm.get('category')?.touched">Required</span>
       </div>
-
-      <div class="form-group">
+      <div class="field">
         <label>Amount ($)</label>
-        <input type="number" formControlName="amount" placeholder="e.g. 45.00" min="0.01" step="0.01"/>
-        <span class="error-msg"
-              *ngIf="expenseForm.get('amount')?.invalid && expenseForm.get('amount')?.touched">
-          Enter a valid amount (min $0.01).
-        </span>
+        <input type="number" formControlName="amount" placeholder="0.00" min="0.01" step="0.01"/>
+        <span class="err" *ngIf="expenseForm.get('amount')?.invalid && expenseForm.get('amount')?.touched">Enter valid amount</span>
       </div>
-
-      <div class="form-group">
+      <div class="field">
         <label>Description</label>
-        <input type="text" formControlName="description" placeholder="e.g. Grocery run"/>
-        <span class="error-msg"
-              *ngIf="expenseForm.get('description')?.invalid && expenseForm.get('description')?.touched">
-          Description is required.
-        </span>
+        <input type="text" formControlName="description" placeholder="What was this for?"/>
+        <span class="err" *ngIf="expenseForm.get('description')?.invalid && expenseForm.get('description')?.touched">Required</span>
       </div>
-
-      <div class="form-group">
+      <div class="field">
         <label>Date</label>
         <input type="date" formControlName="date"/>
-        <span class="error-msg"
-              *ngIf="expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched">
-          Date is required.
-        </span>
+        <span class="err" *ngIf="expenseForm.get('date')?.invalid && expenseForm.get('date')?.touched">Required</span>
       </div>
-
-      <div class="form-group form-group-checkbox">
-        <input type="checkbox" id="isRecurring" formControlName="isRecurring"/>
-        <label for="isRecurring">Recurring expense</label>
+      <div class="field field-check">
+        <input type="checkbox" id="isRec" formControlName="isRecurring"/>
+        <label for="isRec">This is a recurring expense</label>
       </div>
-
       <div class="modal-actions">
         <button type="button" class="btn-ghost" (click)="closeModal()">Cancel</button>
-        <button type="submit" class="btn-primary"
-                [disabled]="expenseForm.invalid || isSubmitting">
+        <button type="submit" class="btn-primary" [disabled]="expenseForm.invalid || isSubmitting">
           {{ isSubmitting ? 'Saving...' : (editingExpense ? 'Update' : 'Add Expense') }}
         </button>
       </div>
-
     </form>
   </div>
 </div>

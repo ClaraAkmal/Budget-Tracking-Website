@@ -43,10 +43,9 @@ export class BudgetsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userId = this.authService.currentUser?.uid ?? '';
+  if (!this.userId) return;
 
-    this.budgetService.loadBudgets(this.userId);
-    this.transactionService.loadExpenses(this.userId);
-
+  
     this.sub = combineLatest([
       this.budgetService.budgets$,
       this.transactionService.expenses$
@@ -55,6 +54,8 @@ export class BudgetsComponent implements OnInit, OnDestroy {
       this.budgets = budgets;
       this.applyFilters();
     });
+  this.budgetService.loadBudgets(this.userId);
+    this.transactionService.loadExpenses(this.userId);
 
     this.initForm();
   }

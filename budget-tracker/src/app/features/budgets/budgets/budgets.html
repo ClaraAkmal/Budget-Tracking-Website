@@ -1,162 +1,119 @@
-<div class="budgets-page">
-
-  <!-- Page Header -->
+<div class="page">
   <div class="page-header">
-    <h1>Budgets</h1>
-    <button class="btn-primary" (click)="openAddModal()">+ Add Budget</button>
+    <div>
+      <h1>Budgets</h1>
+      <p>Track spending limits by category and month</p>
+    </div>
+    <button class="btn-primary" (click)="openAddModal()">+ New Budget</button>
   </div>
 
   <!-- Filters -->
-  <div class="filters-bar">
+  <div class="filter-bar">
     <select [(ngModel)]="filterCategory" (change)="applyFilters()">
       <option value="">All Categories</option>
-      <option *ngFor="let cat of categories" [value]="cat">
-  {{ cat }}
-</option>
+      <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
     </select>
-
-    <input
-      type="month"
-      [(ngModel)]="filterMonth"
-      (change)="applyFilters()"
-      placeholder="Filter by month"
-    />
-
-    <button class="btn-ghost" (click)="filterCategory = ''; filterMonth = ''; applyFilters()">
-      Clear Filters
-    </button>
+    <input type="month" [(ngModel)]="filterMonth" (change)="applyFilters()"/>
+    <button class="btn-ghost" (click)="filterCategory=''; filterMonth=''; applyFilters()">Reset</button>
   </div>
 
-  <!-- Table -->
-  <div class="table-wrapper">
-    <table *ngIf="filteredBudgets.length > 0; else emptyState">
-      <thead>
-        <tr>
-          <th>Category</th>
-          <th>Month</th>
-          <th>Limit</th>
-          <th>Spent</th>
-          <th>Remaining</th>
-          <th>Usage</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          *ngFor="let budget of filteredBudgets; trackBy: trackByBudgetId"
-          [ngClass]="getStatusClass(budget)"
-        >
-          <td>{{ budget.category }}</td>
-          <td>{{ budget.month }}</td>
-          <td>{{ budget.limit | currency }}</td>
-          <td>{{ budget.spent | currency }}</td>
-          <td>{{ (budget.limit - budget.spent) | currency }}</td>
-          <td>
-            <div class="progress-bar-track">
-              <div
-                class="progress-bar-fill"
-                [ngStyle]="{ 'width': getUsagePercent(budget) + '%' }"
-                [ngClass]="{
-                  'fill-over': getUsagePercent(budget) >= 100,
-                  'fill-warning': getUsagePercent(budget) >= 80 && getUsagePercent(budget) < 100,
-                  'fill-ok': getUsagePercent(budget) < 80
-                }"
-              ></div>
-            </div>
-            <span class="pct-label">{{ getUsagePercent(budget) | number:'1.0-0' }}%</span>
-          </td>
-          <td>
-            <span class="badge" [ngClass]="getStatusClass(budget)">
-              {{ getUsagePercent(budget) >= 100 ? 'Over' :
-                 getUsagePercent(budget) >= 80 ? 'Warning' : 'OK' }}
-            </span>
-          </td>
-          <td class="actions-cell">
-            <button class="btn-edit" (click)="openEditModal(budget)">Edit</button>
-            <button class="btn-delete" (click)="deleteBudget(budget)">Delete</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+  <!-- Cards Grid -->
+  <div class="budget-grid" *ngIf="filteredBudgets.length > 0; else empty">
+    <div class="budget-card"
+         *ngFor="let b of filteredBudgets; trackBy: trackByBudgetId"
+         [ngClass]="getStatusClass(b)">
 
-    <ng-template #emptyState>
-      <div class="empty-state">
-        <p>No budgets found. Add your first budget to get started.</p>
+      <div class="bc-header">
+        <div class="bc-category-badge">{{ b.category }}</div>
+        <div class="bc-actions">
+          <button class="icon-btn edit-btn" (click)="openEditModal(b)" title="Edit">✎</button>
+          <button class="icon-btn del-btn"  (click)="deleteBudget(b)"  title="Delete">✕</button>
+        </div>
       </div>
-    </ng-template>
+
+      <div class="bc-month">{{ b.month }}</div>
+
+      <div class="bc-amounts">
+        <div class="bc-spent">
+          <span class="bc-amount-label">Spent</span>
+          <span class="bc-amount-val" [ngClass]="getStatusClass(b)">{{ b.spent | currency }}</span>
+        </div>
+        <div class="bc-divider"></div>
+        <div class="bc-limit">
+          <span class="bc-amount-label">Limit</span>
+          <span class="bc-amount-val neutral">{{ b.limit | currency }}</span>
+        </div>
+        <div class="bc-divider"></div>
+        <div class="bc-remaining">
+          <span class="bc-amount-label">Left</span>
+          <span class="bc-amount-val" [ngClass]="(b.limit - b.spent) < 0 ? 'status-over' : 'status-ok'">
+            {{ (b.limit - b.spent) | currency }}
+          </span>
+        </div>
+      </div>
+
+      <div class="bc-progress">
+        <div class="bc-track">
+          <div class="bc-fill"
+               [ngStyle]="{ 'width': getUsagePercent(b) + '%' }"
+               [ngClass]="getStatusClass(b) === 'status-over' ? 'fill-over' :
+                          getStatusClass(b) === 'status-warning' ? 'fill-warn' : 'fill-ok'">
+          </div>
+        </div>
+        <span class="bc-pct">{{ getUsagePercent(b) | number:'1.0-0' }}%</span>
+      </div>
+
+      <div class="bc-footer">
+        <span class="bc-badge" [ngClass]="getStatusClass(b)">
+          {{ getUsagePercent(b) >= 100 ? 'Over Budget' :
+             getUsagePercent(b) >= 80  ? 'Near Limit' : 'On Track' }}
+        </span>
+      </div>
+    </div>
   </div>
 
+  <ng-template #empty>
+    <div class="empty-state">
+      <div class="empty-icon">📊</div>
+      <h3>No budgets yet</h3>
+      <p>Create a budget to start tracking your spending limits.</p>
+      <button class="btn-primary" (click)="openAddModal()">+ Create Budget</button>
+    </div>
+  </ng-template>
 </div>
 
-<!-- Modal Overlay -->
-<div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
-  <div class="modal-box" (click)="$event.stopPropagation()">
-
-    <div class="modal-header">
-      <h2>{{ editingBudget ? 'Edit Budget' : 'Add Budget' }}</h2>
+<!-- Modal -->
+<div class="modal-backdrop" *ngIf="showModal" (click)="closeModal()">
+  <div class="modal" (click)="$event.stopPropagation()">
+    <div class="modal-head">
+      <h2>{{ editingBudget ? 'Edit Budget' : 'New Budget' }}</h2>
       <button class="modal-close" (click)="closeModal()">✕</button>
     </div>
-
     <form [formGroup]="budgetForm" (ngSubmit)="onSubmit()">
-
-      <div class="form-group">
-        <label for="category">Category</label>
-        <select id="category" formControlName="category">
-          <option value="">Select a category</option>
+      <div class="field">
+        <label>Category</label>
+        <select formControlName="category">
+          <option value="">Select category</option>
           <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
         </select>
-        <span
-          class="error-msg"
-          *ngIf="budgetForm.get('category')?.invalid && budgetForm.get('category')?.touched"
-        >
-          Category is required.
-        </span>
+        <span class="err" *ngIf="budgetForm.get('category')?.invalid && budgetForm.get('category')?.touched">Required</span>
       </div>
-
-      <div class="form-group">
-        <label for="limit">Monthly Limit ($)</label>
-        <input
-          id="limit"
-          type="number"
-          formControlName="limit"
-          placeholder="e.g. 500"
-          min="1"
-        />
-        <span
-          class="error-msg"
-          *ngIf="budgetForm.get('limit')?.invalid && budgetForm.get('limit')?.touched"
-        >
-          Enter a valid limit (min $1).
-        </span>
+      <div class="field">
+        <label>Monthly Limit ($)</label>
+        <input type="number" formControlName="limit" placeholder="500" min="1"/>
+        <span class="err" *ngIf="budgetForm.get('limit')?.invalid && budgetForm.get('limit')?.touched">Enter a valid amount</span>
       </div>
-
-      <div class="form-group">
-        <label for="month">Month</label>
-        <input
-          id="month"
-          type="month"
-          formControlName="month"
-        />
-        <span
-          class="error-msg"
-          *ngIf="budgetForm.get('month')?.invalid && budgetForm.get('month')?.touched"
-        >
-          Month is required.
-        </span>
+      <div class="field">
+        <label>Month</label>
+        <input type="month" formControlName="month"/>
+        <span class="err" *ngIf="budgetForm.get('month')?.invalid && budgetForm.get('month')?.touched">Required</span>
       </div>
-
       <div class="modal-actions">
         <button type="button" class="btn-ghost" (click)="closeModal()">Cancel</button>
-        <button
-          type="submit"
-          class="btn-primary"
-          [disabled]="budgetForm.invalid || isSubmitting"
-        >
-          {{ isSubmitting ? 'Saving...' : (editingBudget ? 'Update' : 'Add Budget') }}
+        <button type="submit" class="btn-primary" [disabled]="budgetForm.invalid || isSubmitting">
+          {{ isSubmitting ? 'Saving...' : (editingBudget ? 'Update' : 'Create') }}
         </button>
       </div>
-
     </form>
   </div>
 </div>

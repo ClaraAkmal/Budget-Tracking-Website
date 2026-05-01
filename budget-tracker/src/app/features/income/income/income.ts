@@ -40,12 +40,14 @@ export class IncomeComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userId = this.authService.currentUser?.uid ?? '';
-    this.transactionService.loadIncomes(this.userId);
+          if (!this.userId) return;
+
 
     this.sub = this.transactionService.incomes$.subscribe(data => {
       this.incomes = data;
       this.applyFilters();
     });
+    this.transactionService.loadIncomes(this.userId);
 
     this.initForm();
   }
@@ -145,4 +147,10 @@ export class IncomeComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sub.unsubscribe();
   }
+  getRecurringIncomeCount(): number {
+  return this.incomes.filter(i => i.isRecurring).length;
+}
+getUniqueSourceCount(): number {
+  return new Set(this.incomes.map(i => i.source)).size;
+}
 }

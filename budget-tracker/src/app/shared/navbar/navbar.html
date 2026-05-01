@@ -1,13 +1,42 @@
-<nav class="navbar">
-  <a class="brand" routerLink="/dashboard">BudgetTracker</a>
+<nav class="navbar" *ngIf="auth.isLoggedIn">
+  <div class="navbar-inner">
 
-  <div class="nav-links" *ngIf="auth.isLoggedIn">
-    <a routerLink="/dashboard" routerLinkActive="active">Dashboard</a>
-    <a routerLink="/budgets" routerLinkActive="active">Budgets</a>
-    <a routerLink="/expenses" routerLinkActive="active">Expenses</a>
-    <a routerLink="/income" routerLinkActive="active">Income</a>
-    <a routerLink="/goals" routerLinkActive="active">Goals</a>
-    <a routerLink="/reports" routerLinkActive="active">Reports</a>
-    <button (click)="logout()">Logout</button>
+    <a class="navbar-brand" [routerLink]="['/dashboard']">
+      <div class="brand-mark">₿</div>
+      <span class="brand-name">BudgetTracker</span>
+    </a>
+
+    <div class="navbar-links">
+      <a class="nav-link" routerLink="/dashboard"  routerLinkActive="active">
+        <span class="nav-icon">⬛</span> Dashboard
+      </a>
+      <a class="nav-link" routerLink="/budgets"    routerLinkActive="active">
+        <span class="nav-icon">◉</span> Budgets
+      </a>
+      <a class="nav-link" routerLink="/expenses"   routerLinkActive="active">
+        <span class="nav-icon">↓</span> Expenses
+      </a>
+      <a class="nav-link" routerLink="/income"     routerLinkActive="active">
+        <span class="nav-icon">↑</span> Income
+      </a>
+      <a class="nav-link" routerLink="/goals"      routerLinkActive="active">
+        <span class="nav-icon">◎</span> Goals
+      </a>
+      <a class="nav-link" routerLink="/reports"    routerLinkActive="active">
+        <span class="nav-icon">≡</span> Reports
+      </a>
+    </div>
+
+    <div class="navbar-user">
+      <div class="user-avatar">
+        {{ getInitials() }}
+      </div>
+      <div class="user-info">
+        <span class="user-name">{{ auth.currentUser?.displayName || 'User' }}</span>
+        <span class="user-email">{{ auth.currentUser?.email }}</span>
+      </div>
+      <button class="btn-logout" (click)="logout()">Sign out</button>
+    </div>
+
   </div>
 </nav>

@@ -31,11 +31,13 @@ export class GoalsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userId = this.authService.currentUser?.uid ?? '';
-    this.goalService.loadGoals(this.userId);
+      if (!this.userId) return;
+
 
     this.sub = this.goalService.goals$.subscribe(data => {
       this.goals = data;
     });
+    this.goalService.loadGoals(this.userId);
 
     this.initForm();
   }
@@ -158,4 +160,24 @@ getTotalSaved(): number {
   ngOnDestroy(): void {
     this.sub.unsubscribe();
   }
+  getTotalRemaining(): number {
+  return this.goals.reduce((s, g) => s + this.getRemainingAmount(g), 0);
+}
+
+getRingOffset(goal: Goal): number {
+  const circumference = 201;
+  return circumference - (this.getProgress(goal) / 100) * circumference;
+}
+
+getDaysRemaining(goal: Goal): number {
+  const diff = new Date(goal.deadline).getTime() - new Date().getTime();
+  return Math.ceil(diff / (1000 * 60 * 60 * 24));
+}
+
+getDaysClass(goal: Goal): string {
+  const d = this.getDaysRemaining(goal);
+  if (d < 0)  return 'days-past';
+  if (d < 30) return 'days-soon';
+  return 'days-ok';
+}
 }

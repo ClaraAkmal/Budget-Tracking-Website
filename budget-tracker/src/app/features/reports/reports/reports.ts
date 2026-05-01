@@ -53,10 +53,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userId = this.authService.currentUser?.uid ?? '';
+          if (!this.userId) return;
 
-    this.transactionService.loadIncomes(this.userId);
-    this.transactionService.loadExpenses(this.userId);
-    this.budgetService.loadBudgets(this.userId);
+   
 
     this.sub = combineLatest([
       this.transactionService.incomes$,
@@ -65,6 +64,9 @@ export class ReportsComponent implements OnInit, OnDestroy {
     ]).subscribe(([incomes, expenses, budgets]) => {
       this.calculate(incomes, expenses, budgets);
     });
+     this.transactionService.loadIncomes(this.userId);
+    this.transactionService.loadExpenses(this.userId);
+    this.budgetService.loadBudgets(this.userId);
   }
 
   private calculate(

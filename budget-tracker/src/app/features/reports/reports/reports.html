@@ -1,146 +1,113 @@
-<div class="reports-page">
-
-  <!-- Page Header -->
+<div class="page">
   <div class="page-header">
-    <h1>Reports</h1>
-    <div class="header-filter">
-      <input
-        type="month"
-        [(ngModel)]="filterMonth"
-        (change)="applyMonthFilter()"
-      />
+    <div>
+      <h1>Reports</h1>
+      <p>Financial insights and analysis</p>
+    </div>
+    <div class="header-controls">
+      <input type="month" [(ngModel)]="filterMonth" (change)="applyMonthFilter()"/>
       <button class="btn-ghost" (click)="clearFilter()">All Time</button>
     </div>
   </div>
 
-  <!-- KPI Cards -->
-  <div class="kpi-grid">
-
-    <div class="kpi-card kpi-income">
+  <!-- KPI Row -->
+  <div class="kpi-row">
+    <div class="kpi kpi--green">
       <span class="kpi-label">Total Income</span>
-      <span class="kpi-value">{{ totalIncome | currency }}</span>
+      <span class="kpi-val">{{ totalIncome | currency }}</span>
+      <span class="kpi-hint">All sources</span>
     </div>
-
-    <div class="kpi-card kpi-expenses">
+    <div class="kpi kpi--red">
       <span class="kpi-label">Total Expenses</span>
-      <span class="kpi-value">{{ totalExpenses | currency }}</span>
+      <span class="kpi-val">{{ totalExpenses | currency }}</span>
+      <span class="kpi-hint">All categories</span>
     </div>
-
-    <div class="kpi-card"
-         [ngClass]="{ 'kpi-positive': balance >= 0, 'kpi-negative': balance < 0 }">
-      <span class="kpi-label">Balance</span>
-      <span class="kpi-value">{{ balance | currency }}</span>
+    <div class="kpi" [ngClass]="balance >= 0 ? 'kpi--indigo' : 'kpi--amber'">
+      <span class="kpi-label">Net Balance</span>
+      <span class="kpi-val" [ngClass]="balance >= 0 ? 'val-green' : 'val-red'">{{ balance | currency }}</span>
+      <span class="kpi-hint">Income − Expenses</span>
     </div>
-
-    <div class="kpi-card"
-         [ngClass]="{ 'kpi-positive': savingsRate >= 0, 'kpi-negative': savingsRate < 0 }">
+    <div class="kpi" [ngClass]="savingsRate >= 0 ? 'kpi--indigo' : 'kpi--amber'">
       <span class="kpi-label">Savings Rate</span>
-      <span class="kpi-value">{{ savingsRate }}%</span>
+      <span class="kpi-val" [ngClass]="savingsRate >= 0 ? 'val-green' : 'val-red'">{{ savingsRate }}%</span>
+      <span class="kpi-hint">Of income saved</span>
     </div>
-
   </div>
 
-  <!-- Two Column Section -->
+  <!-- Two Col -->
   <div class="two-col">
 
     <!-- Expenses by Category -->
     <div class="report-card">
-      <h2 class="report-card-title">Expenses by Category</h2>
-
-      <div *ngIf="expensesByCategory.length > 0; else noExpenses">
-        <div
-          class="bar-row"
-          *ngFor="let item of expensesByCategory; trackBy: trackByCat"
-        >
-          <span class="bar-label">{{ item.category }}</span>
-          <div class="bar-track">
-            <div
-              class="bar-fill bar-fill--red"
-              [ngStyle]="{ 'width': getBarWidth(item.percentage) }"
-            ></div>
+      <h2>Expenses by Category</h2>
+      <div class="bar-list" *ngIf="expensesByCategory.length > 0; else noData">
+        <div class="bar-item" *ngFor="let item of expensesByCategory; trackBy: trackByCat">
+          <div class="bar-item-head">
+            <span class="bar-cat">{{ item.category }}</span>
+            <span class="bar-meta">{{ item.amount | currency }} · {{ item.percentage }}%</span>
           </div>
-          <span class="bar-meta">
-            {{ item.amount | currency }} ({{ item.percentage }}%)
-          </span>
+          <div class="bar-track">
+            <div class="bar-fill red-fill" [ngStyle]="{ 'width': item.percentage + '%' }"></div>
+          </div>
         </div>
       </div>
-
-      <ng-template #noExpenses>
-        <p class="no-data">No expense data for this period.</p>
-      </ng-template>
+      <ng-template #noData><p class="no-data">No data for this period.</p></ng-template>
     </div>
 
     <!-- Income by Source -->
     <div class="report-card">
-      <h2 class="report-card-title">Income by Source</h2>
-
-      <div *ngIf="incomeBySource.length > 0; else noIncome">
-        <div
-          class="bar-row"
-          *ngFor="let item of incomeBySource; trackBy: trackByCat"
-        >
-          <span class="bar-label">{{ item.category }}</span>
-          <div class="bar-track">
-            <div
-              class="bar-fill bar-fill--green"
-              [ngStyle]="{ 'width': getBarWidth(item.percentage) }"
-            ></div>
+      <h2>Income by Source</h2>
+      <div class="bar-list" *ngIf="incomeBySource.length > 0; else noData2">
+        <div class="bar-item" *ngFor="let item of incomeBySource; trackBy: trackByCat">
+          <div class="bar-item-head">
+            <span class="bar-cat">{{ item.category }}</span>
+            <span class="bar-meta">{{ item.amount | currency }} · {{ item.percentage }}%</span>
           </div>
-          <span class="bar-meta">
-            {{ item.amount | currency }} ({{ item.percentage }}%)
-          </span>
+          <div class="bar-track">
+            <div class="bar-fill green-fill" [ngStyle]="{ 'width': item.percentage + '%' }"></div>
+          </div>
         </div>
       </div>
-
-      <ng-template #noIncome>
-        <p class="no-data">No income data for this period.</p>
-      </ng-template>
+      <ng-template #noData2><p class="no-data">No data for this period.</p></ng-template>
     </div>
 
   </div>
 
-  <!-- Budget Variance Table -->
-  <div class="report-card full-width">
-    <h2 class="report-card-title">Budget Variance</h2>
-
-    <div class="table-wrapper" *ngIf="budgetVariances.length > 0; else noBudgets">
+  <!-- Budget Variance -->
+  <div class="report-card">
+    <h2>Budget Variance</h2>
+    <div class="table-wrap" *ngIf="budgetVariances.length > 0; else noVariance">
       <table>
         <thead>
           <tr>
             <th>Category</th>
             <th>Month</th>
-            <th>Budget Limit</th>
-            <th>Actual Spent</th>
+            <th>Budget</th>
+            <th>Spent</th>
             <th>Variance</th>
             <th>Status</th>
           </tr>
         </thead>
         <tbody>
-          <tr
-            *ngFor="let v of budgetVariances; trackBy: trackByVariance"
-            [ngClass]="getVarianceClass(v.status)"
-          >
-            <td>{{ v.category }}</td>
+          <tr *ngFor="let v of budgetVariances; trackBy: trackByVariance"
+              [ngClass]="getVarianceClass(v.status)">
+            <td class="td-cat">{{ v.category }}</td>
             <td>{{ v.month }}</td>
-            <td>{{ v.limit    | currency }}</td>
-            <td>{{ v.spent    | currency }}</td>
-            <td [ngClass]="getVarianceClass(v.status)">
-              {{ v.variance   | currency }}
+            <td>{{ v.limit  | currency }}</td>
+            <td>{{ v.spent  | currency }}</td>
+            <td class="td-variance" [ngClass]="getVarianceClass(v.status)">
+              {{ v.variance | currency }}
             </td>
             <td>
-              <span class="status-badge" [ngClass]="getVarianceClass(v.status)">
-                {{ v.status === 'over' ? 'Over Budget' :
-                   v.status === 'warning' ? 'Near Limit' : 'Under Budget' }}
+              <span class="var-badge" [ngClass]="getVarianceClass(v.status)">
+                {{ v.status === 'over' ? 'Over Budget' : v.status === 'warning' ? 'Near Limit' : 'Under Budget' }}
               </span>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <ng-template #noBudgets>
-      <p class="no-data">No budget data for this period.</p>
-    </ng-template>
+    <ng-template #noVariance><p class="no-data">No budget data for this period.</p></ng-template>
   </div>
 
 </div>
