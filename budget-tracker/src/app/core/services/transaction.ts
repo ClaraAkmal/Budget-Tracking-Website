@@ -45,16 +45,22 @@ export class TransactionService {
   }
 
   loadIncomes(userId: string): void {
-    this.http.get<{[key: string]: Income}>(
-      `${this.dbUrl}/users/${userId}/incomes.json`
-    ).pipe(map(d => this.mapList<Income>(d)))
-     .subscribe(list => this.incomesSubject.next(list));
-  }
+  this.http.get<{[key: string]: Income}>(
+    `${this.dbUrl}/users/${userId}/incomes.json`
+  ).pipe(map(d => this.mapList<Income>(d)))
+   .subscribe(list => {
+     this.incomesSubject.next(list);
+   });
+}
 
   addIncome(userId: string, income: Omit<Income, 'id'>): Observable<any> {
-    return this.http.post(`${this.dbUrl}/users/${userId}/incomes.json`, income)
-      .pipe(tap(() => this.loadIncomes(userId)));
-  }
+  return this.http.post(`${this.dbUrl}/users/${userId}/incomes.json`, income)
+    .pipe(
+      tap(() => {
+        this.loadIncomes(userId);
+      })
+    );
+}
 
   updateIncome(userId: string, income: Income): Observable<any> {
     return this.http.put(`${this.dbUrl}/users/${userId}/incomes/${income.id}.json`, income)

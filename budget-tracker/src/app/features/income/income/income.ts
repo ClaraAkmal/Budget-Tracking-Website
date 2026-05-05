@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { TransactionService } from '../../../core/services/transaction';
@@ -35,22 +35,26 @@ export class IncomeComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private transactionService: TransactionService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.userId = this.authService.currentUser?.uid ?? '';
-          if (!this.userId) return;
+  this.userId = this.authService.currentUser?.uid ?? '';
 
-
-    this.sub = this.transactionService.incomes$.subscribe(data => {
-      this.incomes = data;
-      this.applyFilters();
-    });
-    this.transactionService.loadIncomes(this.userId);
-
-    this.initForm();
+  if (!this.userId) {
+    return;
   }
+
+  this.sub = this.transactionService.incomes$.subscribe(data => {
+    this.incomes = data;
+    this.applyFilters();
+    this.cdr.detectChanges(); 
+  });
+
+  this.transactionService.loadIncomes(this.userId);
+  this.initForm();
+}
 
   private initForm(): void {
     this.incomeForm = this.fb.group({
@@ -99,6 +103,7 @@ export class IncomeComponent implements OnInit, OnDestroy {
 
   onSubmit(): void {
     if (this.incomeForm.invalid) return;
+  console.log('📝 onSubmit fired');
 
     this.isSubmitting = true;
     const v = this.incomeForm.value;

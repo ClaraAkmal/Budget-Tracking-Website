@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { GoalService } from '../../../core/services/goal';
@@ -26,7 +26,9 @@ export class GoalsComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private goalService: GoalService,
-    private authService: AuthService
+    private authService: AuthService,
+        private cdr: ChangeDetectorRef
+
   ) {}
 
   ngOnInit(): void {
@@ -36,6 +38,7 @@ export class GoalsComponent implements OnInit, OnDestroy {
 
     this.sub = this.goalService.goals$.subscribe(data => {
       this.goals = data;
+      this.cdr.detectChanges(); 
     });
     this.goalService.loadGoals(this.userId);
 

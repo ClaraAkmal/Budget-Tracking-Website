@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectorRef  } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth';
@@ -20,8 +20,7 @@ export class AuthComponent implements OnInit {
     private fb: FormBuilder,
     private auth: AuthService,
     private router: Router,
-      private cdr: ChangeDetectorRef 
-
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -46,26 +45,27 @@ export class AuthComponent implements OnInit {
   }
 
   onSubmit(): void {
-  if (this.authForm.invalid) return;
+    if (this.authForm.invalid) return;
 
-  this.isLoading = true;
-  this.errorMessage = '';
+    this.isLoading = true;
+    this.errorMessage = '';
 
-  const { email, password, displayName } = this.authForm.value;
-  const action$ = this.isLoginMode
-    ? this.auth.login(email, password)
-    : this.auth.register(email, password, displayName);
+    const { email, password, displayName } = this.authForm.value;
+    const action$ = this.isLoginMode
+      ? this.auth.login(email, password)
+      : this.auth.register(email, password, displayName);
 
-  action$.subscribe({
-    next: () => {
-      this.isLoading = false;
-      this.router.navigate(['/dashboard']);
-    },
-    error: (err: Error) => {
-      this.isLoading = false;
-      this.errorMessage = err.message;
-      this.cdr.detectChanges(); 
-    }
-  });
-}
+    action$.subscribe({
+      next: () => {
+        this.isLoading = false;
+        // ✅ Single, direct navigation — no double-navigate hack
+        this.router.navigate(['/dashboard']);
+      },
+      error: (err: Error) => {
+        this.isLoading = false;
+        this.errorMessage = err.message;
+        this.cdr.detectChanges();
+      }
+    });
+  }
 }

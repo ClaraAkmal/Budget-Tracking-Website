@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { combineLatest } from 'rxjs';
@@ -38,7 +38,8 @@ export class BudgetsComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private budgetService: BudgetService,
     private transactionService: TransactionService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -53,6 +54,7 @@ export class BudgetsComponent implements OnInit, OnDestroy {
       this.budgetService.recalculateSpent(this.userId, expenses, budgets);
       this.budgets = budgets;
       this.applyFilters();
+      this.cdr.detectChanges();
     });
   this.budgetService.loadBudgets(this.userId);
     this.transactionService.loadExpenses(this.userId);

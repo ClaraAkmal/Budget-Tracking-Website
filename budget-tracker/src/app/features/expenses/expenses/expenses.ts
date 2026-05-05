@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { TransactionService } from '../../../core/services/transaction';
@@ -35,7 +35,8 @@ export class ExpensesComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private transactionService: TransactionService,
-    private authService: AuthService
+    private authService: AuthService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
@@ -45,6 +46,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     this.sub = this.transactionService.expenses$.subscribe(data => {
       this.expenses = data;
       this.applyFilters();
+      this.cdr.detectChanges(); 
     });
     this.transactionService.loadExpenses(this.userId);
 
