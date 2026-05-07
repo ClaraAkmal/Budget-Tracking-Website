@@ -4,6 +4,8 @@ import { Subscription } from 'rxjs';
 import { TransactionService } from '../../../core/services/transaction';
 import { AuthService } from '../../../core/services/auth';
 import { Expense } from '../../../core/models/expense.model';
+import { ToastService } from '../../../core/services/toast.service';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-expenses',
@@ -36,20 +38,22 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private transactionService: TransactionService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toast: ToastService,
+    private confirmService: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
     this.userId = this.authService.currentUser?.uid ?? '';
-  if (!this.userId) return;
+    if (!this.userId) return;
 
     this.sub = this.transactionService.expenses$.subscribe(data => {
       this.expenses = data;
       this.applyFilters();
-      this.cdr.detectChanges(); 
+      this.cdr.detectChanges();
     });
-    this.transactionService.loadExpenses(this.userId);
 
+    this.transactionService.loadExpenses(this.userId);
     this.initForm();
   }
 
@@ -117,8 +121,18 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         isRecurring: v.isRecurring
       };
       this.transactionService.updateExpense(this.userId, updated).subscribe({
-        next:  () => { this.isSubmitting = false; this.closeModal(); },
-        error: () => { this.isSubmitting = false; }
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.toast.success(
+            'Expense Updated',
+            `"${updated.description}" updated successfully.`
+          );
+        },
+        error: () => {
+          this.isSubmitting = false;
+          this.toast.error('Update Failed', 'Something went wrong. Please try again.');
+        }
       });
     } else {
       const newExpense: Expense = {
@@ -131,40 +145,71 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         createdAt:   new Date().toISOString()
       };
       this.transactionService.addExpense(this.userId, newExpense).subscribe({
-        next:  () => { this.isSubmitting = false; this.closeModal(); },
-        error: () => { this.isSubmitting = false; }
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.toast.success(
+            'Expense Added',
+            `"${newExpense.description}" added successfully.`
+          );
+        },
+        error: () => {
+          this.isSubmitting = false;
+          this.toast.error('Add Failed', 'Something went wrong. Please try again.');
+        }
       });
     }
   }
 
   deleteExpense(expense: Expense): void {
-    if (!confirm(`Delete "${expense.description}"?`)) return;
-    this.transactionService.deleteExpense(this.userId, expense.id!).subscribe();
+    this.confirmService.confirm({
+      header: 'Delete Expense',
+      message: `Are you sure you want to delete "${expense.description}"?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      onAccept: () => {
+        this.transactionService.deleteExpense(this.userId, expense.id!).subscribe({
+          next: () => {
+            this.toast.warn(
+              'Expense Deleted',
+              `"${expense.description}" has been deleted.`
+            );
+          },
+          error: () => {
+            this.toast.error('Delete Failed', 'Something went wrong. Please try again.');
+          }
+        });
+      }
+    });
   }
 
   trackByExpenseId(index: number, expense: Expense): string {
     return expense.id ?? index.toString();
   }
 
+  getHighestExpense(): number {
+    if (!this.filteredExpenses.length) return 0;
+    return Math.max(...this.filteredExpenses.map(e => e.amount));
+  }
+
+  getRecurringCount(): number {
+    return this.expenses.filter(e => e.isRecurring).length;
+  }
+
+  getTopCategory(): string {
+    if (!this.expenses.length) return '—';
+    const map = new Map<string, number>();
+    this.expenses.forEach(e =>
+      map.set(e.category, (map.get(e.category) ?? 0) + e.amount)
+    );
+    return [...map.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
+  }
+
+  getTotalExpenses(): number {
+    return this.expenses.reduce((s, e) => s + e.amount, 0);
+  }
+
   ngOnDestroy(): void {
     this.sub.unsubscribe();
   }
-getHighestExpense(): number {
-  if (!this.filteredExpenses.length) return 0;
-  return Math.max(...this.filteredExpenses.map(e => e.amount));
-}
-getRecurringCount(): number {
-  return this.expenses.filter(e => e.isRecurring).length;
-}
-
-getTopCategory(): string {
-  if (!this.expenses.length) return '—';
-  const map = new Map<string, number>();
-  this.expenses.forEach(e => map.set(e.category, (map.get(e.category) ?? 0) + e.amount));
-  return [...map.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? '—';
-}
-
-getTotalExpenses(): number {
-  return this.expenses.reduce((s, e) => s + e.amount, 0);
-}
 }

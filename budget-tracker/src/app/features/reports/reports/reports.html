@@ -4,13 +4,18 @@
       <h1>Reports</h1>
       <p>Financial insights and analysis</p>
     </div>
-    <div class="header-controls">
-      <input type="month" [(ngModel)]="filterMonth" (change)="applyMonthFilter()"/>
-      <button class="btn-ghost" (click)="clearFilter()">All Time</button>
+   <div class="header-controls">
+     <input   title="Select month" type="month" [(ngModel)]="filterMonth" (change)="applyMonthFilter()"/>
+     <button class="btn-ghost" (click)="clearFilter()">All Time</button>
+     <app-report-generator
+       *ngIf="reportData"
+        [data]="reportData"
+        [userName]="authService.currentUser?.displayName ?? 'User'"
+        ></app-report-generator>
     </div>
   </div>
 
-  <!-- KPI Row -->
+  <!-- ── KPI Row ─────────────────────────────────────────────────────────── -->
   <div class="kpi-row">
     <div class="kpi kpi--green">
       <span class="kpi-label">Total Income</span>
@@ -34,10 +39,8 @@
     </div>
   </div>
 
-  <!-- Two Col -->
+  <!-- ── Income vs Expenses ─────────────────────────────────────────────── -->
   <div class="two-col">
-
-    <!-- Expenses by Category -->
     <div class="report-card">
       <h2>Expenses by Category</h2>
       <div class="bar-list" *ngIf="expensesByCategory.length > 0; else noData">
@@ -54,7 +57,6 @@
       <ng-template #noData><p class="no-data">No data for this period.</p></ng-template>
     </div>
 
-    <!-- Income by Source -->
     <div class="report-card">
       <h2>Income by Source</h2>
       <div class="bar-list" *ngIf="incomeBySource.length > 0; else noData2">
@@ -70,10 +72,9 @@
       </div>
       <ng-template #noData2><p class="no-data">No data for this period.</p></ng-template>
     </div>
-
   </div>
 
-  <!-- Budget Variance -->
+  <!-- ── Budget Variance ────────────────────────────────────────────────── -->
   <div class="report-card">
     <h2>Budget Variance</h2>
     <div class="table-wrap" *ngIf="budgetVariances.length > 0; else noVariance">
@@ -108,6 +109,115 @@
       </table>
     </div>
     <ng-template #noVariance><p class="no-data">No budget data for this period.</p></ng-template>
+  </div>
+
+  <!-- ── Savings Progress ───────────────────────────────────────────────── -->
+  <div class="report-card">
+    <h2>Savings Progress</h2>
+
+    <!-- Savings KPI strip -->
+    <div class="savings-kpi-strip" *ngIf="goalProgresses.length > 0">
+      <div class="savings-kpi">
+        <span class="savings-kpi-val">{{ totalSaved | currency }}</span>
+        <span class="savings-kpi-label">Total saved</span>
+      </div>
+      <div class="savings-kpi-divider"></div>
+      <div class="savings-kpi">
+        <span class="savings-kpi-val">{{ totalSavingsTarget | currency }}</span>
+        <span class="savings-kpi-label">Total target</span>
+      </div>
+      <div class="savings-kpi-divider"></div>
+      <div class="savings-kpi">
+        <span class="savings-kpi-val" [ngClass]="overallSavingsRate >= 75 ? 'val-green' : overallSavingsRate >= 40 ? 'val-amber' : 'val-red'">
+          {{ overallSavingsRate }}%
+        </span>
+        <span class="savings-kpi-label">Overall progress</span>
+      </div>
+      <div class="savings-kpi-divider"></div>
+      <div class="savings-kpi">
+        <span class="savings-kpi-val val-green">{{ completedGoals }}</span>
+        <span class="savings-kpi-label">Goals completed</span>
+      </div>
+    </div>
+
+    <!-- Goal cards grid -->
+    <div class="goals-grid" *ngIf="goalProgresses.length > 0; else noGoals">
+      <div
+        class="goal-card"
+        *ngFor="let g of goalProgresses; trackBy: trackByGoal"
+        [ngClass]="{ 'goal-card--complete': g.isCompleted }"
+      >
+        <!-- SVG ring -->
+        <div class="goal-ring-wrap">
+          <svg class="goal-ring" viewBox="0 0 88 88">
+            <circle
+              cx="44" cy="44" r="36"
+              fill="none"
+              stroke="currentColor"
+              class="ring-track"
+              stroke-width="7"
+            />
+            <circle
+              cx="44" cy="44" r="36"
+              fill="none"
+              [attr.stroke]="getGoalRingColor(g.percentage)"
+              stroke-width="7"
+              stroke-linecap="round"
+              [attr.stroke-dasharray]="g.circumference"
+              [attr.stroke-dashoffset]="g.dashOffset"
+              style="transform: rotate(-90deg); transform-origin: center; transition: stroke-dashoffset 0.6s ease;"
+            />
+            <text x="44" y="40" text-anchor="middle" class="ring-pct" dominant-baseline="central">
+              {{ g.percentage }}%
+            </text>
+            <text x="44" y="55" text-anchor="middle" class="ring-sub" dominant-baseline="central">
+              {{ g.isCompleted ? '✓' : 'done' }}
+            </text>
+          </svg>
+        </div>
+
+        <!-- Goal info -->
+        <div class="goal-info">
+          <p class="goal-title">{{ g.title }}</p>
+          <p class="goal-amounts">
+            <span class="saved-amt">{{ g.savedAmount | currency }}</span>
+            <span class="of-label"> of </span>
+            <span class="target-amt">{{ g.targetAmount | currency }}</span>
+          </p>
+
+          <!-- Progress bar -->
+          <div class="goal-bar-track">
+            <div
+              class="goal-bar-fill"
+              [style.width.%]="g.percentage"
+              [style.background]="getGoalRingColor(g.percentage)"
+            ></div>
+          </div>
+
+          <div class="goal-meta-row">
+            <span class="goal-remaining" *ngIf="!g.isCompleted">
+              {{ g.remaining | currency }} remaining
+            </span>
+            <span class="goal-remaining val-green" *ngIf="g.isCompleted">
+              Goal reached!
+            </span>
+            <span
+              class="goal-deadline"
+              [ngClass]="{
+                'deadline-past': isDeadlinePast(g.deadline) && !g.isCompleted,
+                'deadline-soon': isDeadlineSoon(g.deadline) && !g.isCompleted
+              }"
+            >
+              {{ g.deadline }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ng-template #noGoals>
+      <p class="no-data">No savings goals found. Add goals to track your progress here.</p>
+    </ng-template>
   </div>
 
 </div>

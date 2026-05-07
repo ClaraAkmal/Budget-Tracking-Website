@@ -4,6 +4,8 @@ import { Subscription } from 'rxjs';
 import { GoalService } from '../../../core/services/goal';
 import { AuthService } from '../../../core/services/auth';
 import { Goal } from '../../../core/models/goal.model';
+import { ToastService } from '../../../core/services/toast.service';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-goals',
@@ -27,21 +29,21 @@ export class GoalsComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private goalService: GoalService,
     private authService: AuthService,
-        private cdr: ChangeDetectorRef
-
+    private cdr: ChangeDetectorRef,
+    private toast: ToastService,
+    private confirmService: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
     this.userId = this.authService.currentUser?.uid ?? '';
-      if (!this.userId) return;
-
+    if (!this.userId) return;
 
     this.sub = this.goalService.goals$.subscribe(data => {
       this.goals = data;
-      this.cdr.detectChanges(); 
+      this.cdr.detectChanges();
     });
-    this.goalService.loadGoals(this.userId);
 
+    this.goalService.loadGoals(this.userId);
     this.initForm();
   }
 
@@ -125,8 +127,18 @@ export class GoalsComponent implements OnInit, OnDestroy {
         deadline:     v.deadline
       };
       this.goalService.updateGoal(this.userId, updated).subscribe({
-        next:  () => { this.isSubmitting = false; this.closeModal(); },
-        error: () => { this.isSubmitting = false; }
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.toast.success(
+            'Goal Updated',
+            `"${updated.title}" updated successfully.`
+          );
+        },
+        error: () => {
+          this.isSubmitting = false;
+          this.toast.error('Update Failed', 'Something went wrong. Please try again.');
+        }
       });
     } else {
       const newGoal: Goal = {
@@ -138,49 +150,78 @@ export class GoalsComponent implements OnInit, OnDestroy {
         createdAt:    new Date().toISOString()
       };
       this.goalService.addGoal(this.userId, newGoal).subscribe({
-        next:  () => { this.isSubmitting = false; this.closeModal(); },
-        error: () => { this.isSubmitting = false; }
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.toast.success(
+            'Goal Created',
+            `"${newGoal.title}" created successfully.`
+          );
+        },
+        error: () => {
+          this.isSubmitting = false;
+          this.toast.error('Create Failed', 'Something went wrong. Please try again.');
+        }
       });
     }
   }
 
   deleteGoal(goal: Goal): void {
-    if (!confirm(`Delete goal "${goal.title}"?`)) return;
-    this.goalService.deleteGoal(this.userId, goal.id!).subscribe();
+    this.confirmService.confirm({
+      header: 'Delete Goal',
+      message: `Are you sure you want to delete "${goal.title}"?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      onAccept: () => {
+        this.goalService.deleteGoal(this.userId, goal.id!).subscribe({
+          next: () => {
+            this.toast.warn(
+              'Goal Deleted',
+              `"${goal.title}" has been deleted.`
+            );
+          },
+          error: () => {
+            this.toast.error('Delete Failed', 'Something went wrong. Please try again.');
+          }
+        });
+      }
+    });
   }
 
   trackByGoalId(index: number, goal: Goal): string {
     return goal.id ?? index.toString();
   }
-  getCompletedCount(): number {
-  return this.goals.filter(g => this.getProgress(g) >= 100).length;
-}
 
-getTotalSaved(): number {
-  return this.goals.reduce((sum, g) => sum + g.savedAmount, 0);
-}
+  getCompletedCount(): number {
+    return this.goals.filter(g => this.getProgress(g) >= 100).length;
+  }
+
+  getTotalSaved(): number {
+    return this.goals.reduce((sum, g) => sum + g.savedAmount, 0);
+  }
+
+  getTotalRemaining(): number {
+    return this.goals.reduce((s, g) => s + this.getRemainingAmount(g), 0);
+  }
+
+  getRingOffset(goal: Goal): number {
+    const circumference = 201;
+    return circumference - (this.getProgress(goal) / 100) * circumference;
+  }
+
+  getDaysRemaining(goal: Goal): number {
+    const diff = new Date(goal.deadline).getTime() - new Date().getTime();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
+  getDaysClass(goal: Goal): string {
+    const d = this.getDaysRemaining(goal);
+    if (d < 0)  return 'days-past';
+    if (d < 30) return 'days-soon';
+    return 'days-ok';
+  }
 
   ngOnDestroy(): void {
     this.sub.unsubscribe();
   }
-  getTotalRemaining(): number {
-  return this.goals.reduce((s, g) => s + this.getRemainingAmount(g), 0);
-}
-
-getRingOffset(goal: Goal): number {
-  const circumference = 201;
-  return circumference - (this.getProgress(goal) / 100) * circumference;
-}
-
-getDaysRemaining(goal: Goal): number {
-  const diff = new Date(goal.deadline).getTime() - new Date().getTime();
-  return Math.ceil(diff / (1000 * 60 * 60 * 24));
-}
-
-getDaysClass(goal: Goal): string {
-  const d = this.getDaysRemaining(goal);
-  if (d < 0)  return 'days-past';
-  if (d < 30) return 'days-soon';
-  return 'days-ok';
-}
 }

@@ -1,0 +1,174 @@
+/* ── Trigger button ───────────────────────────────────────────────────────── */
+.btn-generate {
+  display: inline-flex; align-items: center; gap: 0.45rem;
+  padding: 0.55rem 1.1rem; background: #6366f1; color: #fff;
+  border: none; border-radius: 10px; font-size: 0.85rem; font-weight: 700;
+  cursor: pointer; transition: background 0.18s, transform 0.15s;
+}
+.btn-generate:hover { background: #4f46e5; transform: translateY(-1px); }
+.btn-icon { font-style: normal; font-size: 0.9rem; }
+
+/* ── Modal overlay ────────────────────────────────────────────────────────── */
+.rg-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,0.55);
+  display: flex; align-items: flex-start; justify-content: center;
+  z-index: 1000; padding: 1.5rem; overflow-y: auto;
+}
+.rg-modal {
+  background: #f8fafc; border-radius: 18px; width: 100%; max-width: 860px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.18); overflow: hidden;
+}
+
+/* ── Modal header ─────────────────────────────────────────────────────────── */
+.rg-modal-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 1.2rem 1.5rem; background: #fff; border-bottom: 1px solid #e2e8f0;
+  gap: 1rem; flex-wrap: wrap;
+}
+.rg-modal-header h2 { font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0 0 0.15rem; }
+.rg-modal-header p  { font-size: 0.8rem; color: #64748b; margin: 0; }
+.rg-modal-actions { display: flex; gap: 0.6rem; align-items: center; }
+
+.btn-print {
+  padding: 0.5rem 1.1rem; background: #0f172a; color: #fff;
+  border: none; border-radius: 9px; font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: background 0.18s;
+}
+.btn-print:hover:not(:disabled) { background: #1e293b; }
+.btn-print:disabled { opacity: 0.6; cursor: default; }
+
+.btn-close {
+  width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid #e2e8f0;
+  background: transparent; color: #64748b; font-size: 0.9rem;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s;
+}
+.btn-close:hover { background: #f1f5f9; }
+
+/* ── Report body (scrollable preview) ────────────────────────────────────── */
+.rg-body {
+  padding: 2rem; max-height: 70vh; overflow-y: auto; background: #fff;
+}
+
+/* ── Report cover header ──────────────────────────────────────────────────── */
+.rpt-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  gap: 1rem; margin-bottom: 1.2rem;
+}
+.rpt-logo  { font-size: 1.1rem; font-weight: 900; color: #6366f1; margin-bottom: 0.3rem; letter-spacing: -0.02em; }
+.rpt-title { font-size: 1.3rem; font-weight: 800; color: #0f172a; margin-bottom: 0.2rem; }
+.rpt-period{ font-size: 0.8rem; color: #64748b; }
+.rpt-header-right { text-align: right; }
+.rpt-meta-row { display: flex; justify-content: flex-end; gap: 0.6rem; margin-bottom: 0.25rem; }
+.rpt-meta-label { font-size: 0.72rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; }
+.rpt-meta-val   { font-size: 0.78rem; font-weight: 600; color: #334155; }
+.rpt-divider { height: 2px; background: linear-gradient(90deg, #6366f1 0%, #e2e8f0 60%); margin-bottom: 1.8rem; border-radius: 2px; }
+
+/* ── Sections ─────────────────────────────────────────────────────────────── */
+.rpt-section { margin-bottom: 2rem; }
+.rpt-section-title {
+  font-size: 0.78rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #6366f1; margin-bottom: 0.9rem;
+  padding-bottom: 0.4rem; border-bottom: 1.5px solid #e0e7ff;
+}
+
+/* ── KPI grid ─────────────────────────────────────────────────────────────── */
+.rpt-kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 0.75rem; }
+.rpt-kpi {
+  padding: 1rem 1.1rem; border-radius: 12px; border: 1px solid #f1f5f9;
+  border-left: 4px solid #e2e8f0; background: #f8fafc;
+}
+.rpt-kpi--green  { border-left-color: #22c55e; }
+.rpt-kpi--red    { border-left-color: #ef4444; }
+.rpt-kpi--indigo { border-left-color: #6366f1; }
+.rpt-kpi--amber  { border-left-color: #f59e0b; }
+.rpt-kpi-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; font-weight: 600; margin-bottom: 0.3rem; }
+.rpt-kpi-val   { font-size: 1.25rem; font-weight: 800; color: #0f172a; }
+
+/* ── Two-col income/expense ───────────────────────────────────────────────── */
+.rpt-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.rpt-sub-card { background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 1rem 1.1rem; }
+.rpt-sub-title { font-size: 0.78rem; font-weight: 700; color: #334155; margin-bottom: 0.8rem; }
+.rpt-bar-list { display: flex; flex-direction: column; gap: 0.7rem; }
+.rpt-bar-row  { display: flex; flex-direction: column; gap: 0.25rem; }
+.rpt-bar-label { display: flex; justify-content: space-between; font-size: 0.78rem; font-weight: 600; color: #334155; }
+.rpt-bar-meta  { font-size: 0.72rem; color: #94a3b8; font-weight: 400; }
+.rpt-bar-track { height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.rpt-bar-fill  { height: 100%; border-radius: 999px; }
+.rpt-bar--red   { background: #ef4444; }
+.rpt-bar--green { background: #22c55e; }
+
+/* ── Tables ───────────────────────────────────────────────────────────────── */
+.rpt-table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+.rpt-table thead tr { background: #f1f5f9; }
+.rpt-table th { padding: 0.6rem 0.85rem; text-align: left; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: #64748b; font-weight: 700; }
+.rpt-table td { padding: 0.6rem 0.85rem; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.rpt-table tbody tr:last-child td { border-bottom: none; }
+.rpt-table tbody tr:hover { background: #fafafa; }
+.bold { font-weight: 700; color: #1e293b; }
+.pos  { color: #16a34a; font-weight: 700; }
+.neg  { color: #dc2626; font-weight: 700; }
+
+/* Status colors */
+.status-ok   { color: #16a34a; }
+.status-warn { color: #d97706; }
+.status-over { color: #dc2626; font-weight: 700; }
+.status-pending { color: #6366f1; }
+
+/* ── Badges ───────────────────────────────────────────────────────────────── */
+.rpt-badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 999px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+.rpt-badge.status-ok      { background: #dcfce7; color: #166534; }
+.rpt-badge.status-warn    { background: #fef3c7; color: #92400e; }
+.rpt-badge.status-over    { background: #fee2e2; color: #991b1b; }
+.rpt-badge.status-pending { background: #e0e7ff; color: #3730a3; }
+
+/* ── Savings summary ──────────────────────────────────────────────────────── */
+.rpt-savings-summary {
+  display: flex; align-items: center; background: #f8fafc;
+  border: 1px solid #f1f5f9; border-radius: 12px; padding: 1rem 1.5rem; gap: 0;
+}
+.rpt-ss-item  { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.rpt-ss-val   { font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+.rpt-ss-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em; color: #94a3b8; font-weight: 600; }
+.rpt-ss-divider { width: 1px; height: 2rem; background: #e2e8f0; }
+
+/* ── Goal progress bar in table ───────────────────────────────────────────── */
+.rpt-goal-bar-wrap  { display: flex; align-items: center; gap: 0.5rem; min-width: 100px; }
+.rpt-goal-bar-track { flex: 1; height: 7px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+.rpt-goal-bar-fill  { height: 100%; border-radius: 999px; transition: width 0.4s; }
+.rpt-goal-pct       { font-size: 0.72rem; font-weight: 700; color: #64748b; min-width: 28px; }
+
+/* ── Report footer ────────────────────────────────────────────────────────── */
+.rpt-footer {
+  display: flex; justify-content: space-between; margin-top: 2rem;
+  padding-top: 1rem; border-top: 1px solid #e2e8f0;
+  font-size: 0.7rem; color: #94a3b8;
+}
+
+.rpt-empty { text-align: center; color: #94a3b8; font-size: 0.84rem; padding: 1.2rem 0; }
+
+/* ── Print styles ─────────────────────────────────────────────────────────── */
+@media print {
+  /* Hide everything except the report */
+  body > * { display: none !important; }
+  app-root { display: block !important; }
+  app-root > * { display: none !important; }
+  app-report-generator { display: block !important; }
+
+  .rg-overlay  { position: static !important; background: none !important; padding: 0 !important; }
+  .rg-modal    { box-shadow: none !important; border-radius: 0 !important; max-width: 100% !important; }
+  .rg-modal-header { display: none !important; }
+  .rg-body {
+    max-height: none !important; overflow: visible !important;
+    padding: 1.5cm !important;
+  }
+  .btn-generate { display: none !important; }
+
+  /* Print typography */
+  .rpt-kpi-grid    { grid-template-columns: repeat(4,1fr) !important; }
+  .rpt-two-col     { grid-template-columns: 1fr 1fr !important; }
+  .rpt-table tbody tr:hover { background: none !important; }
+
+  /* Page setup */
+  @page { size: A4; margin: 1.5cm; }
+}

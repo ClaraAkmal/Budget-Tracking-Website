@@ -1,11 +1,12 @@
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subscription } from 'rxjs';
-import { combineLatest } from 'rxjs';
+import { Subscription, combineLatest } from 'rxjs';
 import { BudgetService } from '../../../core/services/budget';
 import { TransactionService } from '../../../core/services/transaction';
 import { AuthService } from '../../../core/services/auth';
 import { Budget } from '../../../core/models/budget.model';
+import { ToastService } from '../../../core/services/toast.service';
+import { ConfirmDialogService } from '../../../core/services/confirm-dialog.service';
 
 @Component({
   selector: 'app-budgets',
@@ -39,14 +40,15 @@ export class BudgetsComponent implements OnInit, OnDestroy {
     private budgetService: BudgetService,
     private transactionService: TransactionService,
     private authService: AuthService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toast: ToastService,
+    private confirmService: ConfirmDialogService
   ) {}
 
   ngOnInit(): void {
     this.userId = this.authService.currentUser?.uid ?? '';
-  if (!this.userId) return;
+    if (!this.userId) return;
 
-  
     this.sub = combineLatest([
       this.budgetService.budgets$,
       this.transactionService.expenses$
@@ -56,9 +58,9 @@ export class BudgetsComponent implements OnInit, OnDestroy {
       this.applyFilters();
       this.cdr.detectChanges();
     });
-  this.budgetService.loadBudgets(this.userId);
-    this.transactionService.loadExpenses(this.userId);
 
+    this.budgetService.loadBudgets(this.userId);
+    this.transactionService.loadExpenses(this.userId);
     this.initForm();
   }
 
@@ -114,8 +116,18 @@ export class BudgetsComponent implements OnInit, OnDestroy {
         month:    v.month
       };
       this.budgetService.updateBudget(this.userId, updated).subscribe({
-        next:  () => { this.isSubmitting = false; this.closeModal(); },
-        error: () => { this.isSubmitting = false; }
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.toast.success(
+            'Budget Updated',
+            `Budget for "${updated.category}" updated successfully.`
+          );
+        },
+        error: () => {
+          this.isSubmitting = false;
+          this.toast.error('Update Failed', 'Something went wrong. Please try again.');
+        }
       });
     } else {
       const newBudget: Budget = {
@@ -127,15 +139,42 @@ export class BudgetsComponent implements OnInit, OnDestroy {
         createdAt: new Date().toISOString()
       };
       this.budgetService.addBudget(this.userId, newBudget).subscribe({
-        next:  () => { this.isSubmitting = false; this.closeModal(); },
-        error: () => { this.isSubmitting = false; }
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.toast.success(
+            'Budget Created',
+            `Budget for "${newBudget.category}" created successfully.`
+          );
+        },
+        error: () => {
+          this.isSubmitting = false;
+          this.toast.error('Create Failed', 'Something went wrong. Please try again.');
+        }
       });
     }
   }
 
   deleteBudget(budget: Budget): void {
-    if (!confirm(`Delete budget for "${budget.category}"?`)) return;
-    this.budgetService.deleteBudget(this.userId, budget.id!).subscribe();
+    this.confirmService.confirm({
+      header: 'Delete Budget',
+      message: `Are you sure you want to delete the budget for "${budget.category}"?`,
+      acceptLabel: 'Delete',
+      rejectLabel: 'Cancel',
+      onAccept: () => {
+        this.budgetService.deleteBudget(this.userId, budget.id!).subscribe({
+          next: () => {
+            this.toast.warn(
+              'Budget Deleted',
+              `Budget for "${budget.category}" has been deleted.`
+            );
+          },
+          error: () => {
+            this.toast.error('Delete Failed', 'Something went wrong. Please try again.');
+          }
+        });
+      }
+    });
   }
 
   getUsagePercent(budget: Budget): number {

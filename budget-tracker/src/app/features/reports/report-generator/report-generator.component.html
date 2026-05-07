@@ -1,0 +1,220 @@
+<!-- Trigger button — rendered inline in the reports page header -->
+<button class="btn-generate" (click)="open()">
+  <span class="btn-icon">⬇</span> Generate Report
+</button>
+
+<!-- Modal overlay -->
+<div class="rg-overlay" *ngIf="isOpen" (click)="close()">
+  <div class="rg-modal" (click)="$event.stopPropagation()">
+
+    <!-- Modal header -->
+    <div class="rg-modal-header">
+      <div>
+        <h2>Financial Report</h2>
+        <p>{{ data?.periodLabel }}</p>
+      </div>
+      <div class="rg-modal-actions">
+        <button class="btn-print" (click)="printReport()" [disabled]="isPrinting">
+          {{ isPrinting ? 'Preparing…' : '🖨 Print / Save as PDF' }}
+        </button>
+        <button class="btn-close" (click)="close()">✕</button>
+      </div>
+    </div>
+
+    <!-- ── Printable report body ── -->
+    <div class="rg-body" id="report-printable" [class.printing]="isPrinting">
+
+      <!-- Report cover header -->
+      <div class="rpt-header">
+        <div class="rpt-header-left">
+          <div class="rpt-logo">BudgetTracker</div>
+          <div class="rpt-title">Personal Financial Report</div>
+          <div class="rpt-period">Period: {{ data?.periodLabel }}</div>
+        </div>
+        <div class="rpt-header-right">
+          <div class="rpt-meta-row"><span class="rpt-meta-label">Prepared for</span><span class="rpt-meta-val">{{ userName }}</span></div>
+          <div class="rpt-meta-row"><span class="rpt-meta-label">Generated</span><span class="rpt-meta-val">{{ data?.generatedAt }}</span></div>
+        </div>
+      </div>
+      <div class="rpt-divider"></div>
+
+      <!-- Section 1: Financial Summary -->
+      <div class="rpt-section">
+        <div class="rpt-section-title">1. Financial Summary</div>
+        <div class="rpt-kpi-grid">
+          <div class="rpt-kpi rpt-kpi--green">
+            <div class="rpt-kpi-label">Total Income</div>
+            <div class="rpt-kpi-val">{{ formatCurrency(data?.totalIncome ?? 0) }}</div>
+          </div>
+          <div class="rpt-kpi rpt-kpi--red">
+            <div class="rpt-kpi-label">Total Expenses</div>
+            <div class="rpt-kpi-val">{{ formatCurrency(data?.totalExpenses ?? 0) }}</div>
+          </div>
+          <div class="rpt-kpi" [ngClass]="(data?.balance ?? 0) >= 0 ? 'rpt-kpi--indigo' : 'rpt-kpi--amber'">
+            <div class="rpt-kpi-label">Net Balance</div>
+            <div class="rpt-kpi-val" [ngClass]="(data?.balance ?? 0) >= 0 ? 'pos' : 'neg'">
+              {{ formatCurrency(data?.balance ?? 0) }}
+            </div>
+          </div>
+          <div class="rpt-kpi rpt-kpi--indigo">
+            <div class="rpt-kpi-label">Savings Rate</div>
+            <div class="rpt-kpi-val" [ngClass]="(data?.savingsRate ?? 0) >= 0 ? 'pos' : 'neg'">
+              {{ data?.savingsRate ?? 0 }}%
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 2: Income vs Expenses -->
+      <div class="rpt-section">
+        <div class="rpt-section-title">2. Income vs Expenses</div>
+        <div class="rpt-two-col">
+
+          <div class="rpt-sub-card">
+            <div class="rpt-sub-title">Expenses by Category</div>
+            <div *ngIf="data?.expensesByCategory?.length; else noExp" class="rpt-bar-list">
+              <div class="rpt-bar-row" *ngFor="let item of data.expensesByCategory">
+                <div class="rpt-bar-label">
+                  <span>{{ item.category }}</span>
+                  <span class="rpt-bar-meta">{{ formatCurrency(item.amount) }} · {{ item.percentage }}%</span>
+                </div>
+                <div class="rpt-bar-track">
+                  <div class="rpt-bar-fill rpt-bar--red"
+                       [style.width.%]="maxExpense > 0 ? (item.amount / maxExpense) * 100 : 0">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ng-template #noExp><p class="rpt-empty">No expense data for this period.</p></ng-template>
+          </div>
+
+          <div class="rpt-sub-card">
+            <div class="rpt-sub-title">Income by Source</div>
+            <div *ngIf="data?.incomeBySource?.length; else noInc" class="rpt-bar-list">
+              <div class="rpt-bar-row" *ngFor="let item of data.incomeBySource">
+                <div class="rpt-bar-label">
+                  <span>{{ item.category }}</span>
+                  <span class="rpt-bar-meta">{{ formatCurrency(item.amount) }} · {{ item.percentage }}%</span>
+                </div>
+                <div class="rpt-bar-track">
+                  <div class="rpt-bar-fill rpt-bar--green"
+                       [style.width.%]="maxIncome > 0 ? (item.amount / maxIncome) * 100 : 0">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ng-template #noInc><p class="rpt-empty">No income data for this period.</p></ng-template>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Section 3: Budget Variance -->
+      <div class="rpt-section">
+        <div class="rpt-section-title">3. Budget Variance</div>
+        <div *ngIf="data?.budgetVariances?.length; else noBudget">
+          <table class="rpt-table">
+            <thead>
+              <tr>
+                <th>Category</th><th>Month</th><th>Budget</th>
+                <th>Spent</th><th>Variance</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let v of data.budgetVariances">
+                <td class="bold">{{ v.category }}</td>
+                <td>{{ v.month }}</td>
+                <td>{{ formatCurrency(v.limit) }}</td>
+                <td>{{ formatCurrency(v.spent) }}</td>
+                <td [ngClass]="getVarianceClass(v.status)">{{ formatCurrency(v.variance) }}</td>
+                <td>
+                  <span class="rpt-badge" [ngClass]="getVarianceClass(v.status)">
+                    {{ getVarianceLabel(v.status) }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noBudget><p class="rpt-empty">No budget data for this period.</p></ng-template>
+      </div>
+
+      <!-- Section 4: Savings Progress -->
+      <div class="rpt-section">
+        <div class="rpt-section-title">4. Savings Progress</div>
+
+        <!-- Savings summary row -->
+        <div class="rpt-savings-summary">
+          <div class="rpt-ss-item">
+            <div class="rpt-ss-val">{{ formatCurrency(data?.totalSaved ?? 0) }}</div>
+            <div class="rpt-ss-label">Total saved</div>
+          </div>
+          <div class="rpt-ss-divider"></div>
+          <div class="rpt-ss-item">
+            <div class="rpt-ss-val">{{ formatCurrency(data?.totalSavingsTarget ?? 0) }}</div>
+            <div class="rpt-ss-label">Total target</div>
+          </div>
+          <div class="rpt-ss-divider"></div>
+          <div class="rpt-ss-item">
+            <div class="rpt-ss-val" [ngClass]="(data?.overallSavingsRate ?? 0) >= 50 ? 'pos' : 'neg'">
+              {{ data?.overallSavingsRate ?? 0 }}%
+            </div>
+            <div class="rpt-ss-label">Overall progress</div>
+          </div>
+          <div class="rpt-ss-divider"></div>
+          <div class="rpt-ss-item">
+            <div class="rpt-ss-val pos">{{ data?.completedGoals ?? 0 }}</div>
+            <div class="rpt-ss-label">Goals completed</div>
+          </div>
+        </div>
+
+        <!-- Goals table -->
+        <div *ngIf="data?.goalProgresses?.length; else noGoals">
+          <table class="rpt-table" style="margin-top: 1rem;">
+            <thead>
+              <tr>
+                <th>Goal</th><th>Saved</th><th>Target</th>
+                <th>Remaining</th><th>Progress</th><th>Deadline</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let g of data.goalProgresses">
+                <td class="bold">{{ g.title }}</td>
+                <td class="pos">{{ formatCurrency(g.savedAmount) }}</td>
+                <td>{{ formatCurrency(g.targetAmount) }}</td>
+                <td [ngClass]="g.isCompleted ? 'pos' : ''">
+                  {{ g.isCompleted ? '—' : formatCurrency(g.remaining) }}
+                </td>
+                <td>
+                  <div class="rpt-goal-bar-wrap">
+                    <div class="rpt-goal-bar-track">
+                      <div class="rpt-goal-bar-fill"
+                           [style.width.%]="g.percentage"
+                           [style.background]="getGoalBarColor(g.percentage)">
+                      </div>
+                    </div>
+                    <span class="rpt-goal-pct">{{ g.percentage }}%</span>
+                  </div>
+                </td>
+                <td>{{ g.deadline }}</td>
+                <td>
+                  <span class="rpt-badge" [ngClass]="g.isCompleted ? 'status-ok' : 'status-pending'">
+                    {{ g.isCompleted ? 'Completed' : 'In Progress' }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ng-template #noGoals><p class="rpt-empty">No savings goals found.</p></ng-template>
+      </div>
+
+      <!-- Report footer -->
+      <div class="rpt-footer">
+        <span>BudgetTracker — Personal Finance Report</span>
+        <span>Generated {{ data?.generatedAt }}</span>
+      </div>
+
+    </div><!-- /rg-body -->
+  </div><!-- /rg-modal -->
+</div><!-- /rg-overlay -->

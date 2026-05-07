@@ -1,0 +1,15 @@
+<div class="confirm-backdrop" *ngIf="confirmService.current" (click)="confirmService.reject()">
+  <div class="confirm-box" (click)="$event.stopPropagation()">
+    <div class="confirm-icon">⚠</div>
+    <h3 class="confirm-header">{{ confirmService.current.header }}</h3>
+    <p class="confirm-message">{{ confirmService.current.message }}</p>
+    <div class="confirm-actions">
+      <button class="btn-reject" (click)="confirmService.reject()">
+        {{ confirmService.current.rejectLabel || 'Cancel' }}
+      </button>
+      <button class="btn-accept" (click)="confirmService.accept()">
+        {{ confirmService.current.acceptLabel || 'Confirm' }}
+      </button>
+    </div>
+  </div>
+</div>
