@@ -23,6 +23,7 @@ interface AuthResponseData {
 export class AuthService {
 
   private apiKey = environment.firebase.apiKey;
+  //Toolkit REST API URLs
   private signUpUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${this.apiKey}`;
   private signInUrl = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${this.apiKey}`;
 
@@ -54,7 +55,7 @@ export class AuthService {
     }).pipe(
       map(res => this.buildUser(res, displayName)),
       tap(user => this.setCurrentUser(user)),
-      catchError(err => this.handleError(err)) // FIX: arrow function preserves `this`
+      catchError(err => this.handleError(err)) 
     );
   }
 
@@ -66,7 +67,7 @@ export class AuthService {
     }).pipe(
       map(res => this.buildUser(res)),
       tap(user => this.setCurrentUser(user)),
-      catchError(err => this.handleError(err)) // FIX: arrow function preserves `this`
+      catchError(err => this.handleError(err)) 
     );
   }
 
@@ -97,8 +98,6 @@ export class AuthService {
   }
 
   private setCurrentUser(user: User): void {
-    
-
     this.currentUserSubject.next(user);
     localStorage.setItem('budgetUser', JSON.stringify(user));
   }

@@ -57,7 +57,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
     this.initForm();
   }
 
-  private initForm(): void {
+  private initForm(): void {//create form with validation
     this.expenseForm = this.fb.group({
       category:    ['', Validators.required],
       amount:      ['', [Validators.required, Validators.min(0.01)]],
@@ -144,7 +144,7 @@ export class ExpensesComponent implements OnInit, OnDestroy {
         isRecurring: v.isRecurring,
         createdAt:   new Date().toISOString()
       };
-      this.transactionService.addExpense(this.userId, newExpense).subscribe({
+      this.transactionService.addExpense(this.userId, newExpense).subscribe({//listen to expenses change
         next: () => {
           this.isSubmitting = false;
           this.closeModal();

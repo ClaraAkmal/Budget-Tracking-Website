@@ -58,7 +58,6 @@ export class AuthComponent implements OnInit {
     action$.subscribe({
       next: () => {
         this.isLoading = false;
-        // ✅ Single, direct navigation — no double-navigate hack
         this.router.navigate(['/dashboard']);
       },
       error: (err: Error) => {

@@ -48,21 +48,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    // ✅ currentUser$ is a BehaviorSubject — it replays the last value
-    // synchronously on subscribe, so the user is available immediately
-    // after login without any timing issues.
+    //  currentUser$ is a BehaviorSubject — it replays the last value synchronously on subscribe, so the user is available immediately after login without any timing issues.
     const authSub = this.authService.currentUser$.subscribe(user => {
       if (user) {
         this.userId = user.uid;
         this.initializeDashboard();
       }
     });
-    // ✅ Track the auth subscription so it gets cleaned up on destroy
     this.subs.add(authSub);
   }
 
   private initializeDashboard(): void {
-    // ✅ Subscribe to all data streams with combineLatest FIRST,
+    // Subscribe to all data streams with combineLatest FIRST,
     // before calling the load methods. This guarantees we never
     // miss an emission even if HTTP responds synchronously (unlikely
     // but safe). combineLatest will emit as soon as all four subjects
@@ -75,7 +72,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.transactionService.expenses$,
       this.budgetService.budgets$,
       this.goalService.goals$
-    ]).subscribe(([incomes, expenses, budgets, goals]) => {
+    ]).subscribe(([incomes, expenses, budgets, goals]) => {//listen to all data changes
 
       this.totalIncome   = incomes.reduce((s, i) => s + i.amount, 0);
       this.totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
@@ -84,9 +81,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       this.topBudgets = [...budgets]
         .sort((a, b) => this.getBudgetPct(b) - this.getBudgetPct(a))
-        .slice(0, 4);
+        .slice(0, 4);//top 4 budgets
       this.cdr.detectChanges();
-      this.topGoals = [...goals].slice(0, 3);
+      this.topGoals = [...goals].slice(0, 3);//top 3 goals
 
       const expTx: Transaction[] = expenses.map(e => ({
         id:          e.id,
@@ -108,13 +105,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
       this.recentTransactions = [...expTx, ...incTx]
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 6);
+        .slice(0, 6);//lateset 6 transactions
     });
 
-    // ✅ Add to the composite subscription — properly cleaned up on destroy
     this.subs.add(dataSub);
 
-    // ✅ Trigger HTTP loads AFTER subscribing — ensures we catch the emission
+    //  Trigger HTTP loads AFTER subscribing — ensures we catch the emission
     this.transactionService.loadIncomes(this.userId);
     this.transactionService.loadExpenses(this.userId);
     this.budgetService.loadBudgets(this.userId);
@@ -129,7 +125,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   getBudgetPct(b: Budget): number {
-    return b.limit > 0 ? Math.min((b.spent / b.limit) * 100, 100) : 0;
+    return b.limit > 0 ? Math.min((b.spent / b.limit) * 100, 100) : 0;//budget %
   }
 
   getBudgetFillClass(b: Budget): string {
@@ -175,7 +171,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // ✅ Single call unsubscribes ALL tracked subscriptions
     this.subs.unsubscribe();
   }
 }
