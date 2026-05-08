@@ -77,6 +77,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef
   ) {}
 
+
   ngOnInit(): void {
     this.userId = this.authService.currentUser?.uid ?? '';
     if (!this.userId) return;
@@ -113,7 +114,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       ? budgets.filter(b  => b.month === this.filterMonth)
       : budgets;
 
-    // ── Totals ──────────────────────────────────────────────────────────────
+    //Totals 
     this.totalIncome   = filteredIncomes.reduce((s, i) => s + i.amount, 0);
     this.totalExpenses = filteredExpenses.reduce((s, e) => s + e.amount, 0);
     this.balance       = this.totalIncome - this.totalExpenses;
@@ -121,7 +122,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       ? Math.round((this.balance / this.totalIncome) * 100)
       : 0;
 
-    // ── Expenses by category ─────────────────────────────────────────────────
+    // Expenses by category 
     const expCatMap = new Map<string, number>();
     filteredExpenses.forEach(e => {
       expCatMap.set(e.category, (expCatMap.get(e.category) ?? 0) + e.amount);
@@ -136,7 +137,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       }))
       .sort((a, b) => b.amount - a.amount);
 
-    // ── Income by source ─────────────────────────────────────────────────────
+    // Income by source
     const incSrcMap = new Map<string, number>();
     filteredIncomes.forEach(i => {
       incSrcMap.set(i.source, (incSrcMap.get(i.source) ?? 0) + i.amount);
@@ -151,7 +152,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       }))
       .sort((a, b) => b.amount - a.amount);
 
-    // ── Budget variance ──────────────────────────────────────────────────────
+    // Budget variance
     this.budgetVariances = filteredBudgets.map(b => {
       const spent = filteredExpenses
         .filter(e => e.category === b.category && e.date.startsWith(b.month))
@@ -167,7 +168,7 @@ export class ReportsComponent implements OnInit, OnDestroy {
       };
     });
 
-    // ── Savings progress (goals — not filtered by month, goals are ongoing) ──
+    // Savings progress (goals — not filtered by month, goals are ongoing) 
     const radius = 36;
     const circumference = 2 * Math.PI * radius;
 

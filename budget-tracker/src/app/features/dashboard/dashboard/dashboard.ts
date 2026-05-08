@@ -59,13 +59,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   private initializeDashboard(): void {
-    // Subscribe to all data streams with combineLatest FIRST,
-    // before calling the load methods. This guarantees we never
-    // miss an emission even if HTTP responds synchronously (unlikely
-    // but safe). combineLatest will emit as soon as all four subjects
-    // have emitted at least one value — they all start as [] so
-    // the first emission is [[], [], [], []] (instant), then real
-    // data comes in as HTTP responses arrive.
   
     const dataSub = combineLatest([
       this.transactionService.incomes$,
@@ -85,6 +78,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
       this.cdr.detectChanges();
       this.topGoals = [...goals].slice(0, 3);//top 3 goals
 
+      //load data of expenses and incomes and merge them into one array of transactions, then sort by date and take latest 6 transactions
+     
       const expTx: Transaction[] = expenses.map(e => ({
         id:          e.id,
         description: e.description,
@@ -110,7 +105,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     this.subs.add(dataSub);
 
-    //  Trigger HTTP loads AFTER subscribing — ensures we catch the emission
+//load data for the dashboard from database 
     this.transactionService.loadIncomes(this.userId);
     this.transactionService.loadExpenses(this.userId);
     this.budgetService.loadBudgets(this.userId);

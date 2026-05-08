@@ -204,6 +204,7 @@ export class GoalsComponent implements OnInit, OnDestroy {
     return this.goals.reduce((s, g) => s + this.getRemainingAmount(g), 0);
   }
 
+  // For circular progress bar for each goal 
   getRingOffset(goal: Goal): number {
     const circumference = 201;
     return circumference - (this.getProgress(goal) / 100) * circumference;

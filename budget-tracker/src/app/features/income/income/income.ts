@@ -160,6 +160,7 @@ export class IncomeComponent implements OnInit, OnDestroy {
     return income.id ?? index.toString();
   }
 
+  //filter income by recurring ones 
   getRecurringIncomeCount(): number {
     return this.incomes.filter(i => i.isRecurring).length;
   }

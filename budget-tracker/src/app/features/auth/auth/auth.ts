@@ -11,11 +11,15 @@ import { AuthService } from '../../../core/services/auth';
 })
 export class AuthComponent implements OnInit {
   authForm!: FormGroup;
+  //declare variables 
   isLoginMode = true;
   isLoading = false;
   errorMessage = '';
   showPassword = false;
 
+
+
+  //dependency injection --> initialize el services that we will use
   constructor(
     private fb: FormBuilder,
     private auth: AuthService,
@@ -38,6 +42,7 @@ export class AuthComponent implements OnInit {
     this.isLoading = false;
   }
 
+  //switch between register and login mode
   toggleMode(): void {
     this.isLoginMode = !this.isLoginMode;
     this.errorMessage = '';
@@ -50,6 +55,7 @@ export class AuthComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
+    //put values from user's input in form in variables
     const { email, password, displayName } = this.authForm.value;
     const action$ = this.isLoginMode
       ? this.auth.login(email, password)
